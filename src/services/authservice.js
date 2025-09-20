@@ -18,39 +18,39 @@ class AuthService {
     }
     const { name, username, email, password, role } = userData;
 
-    // Check trùng email
+    /* Check trùng email */
     const existedEmail = await User.findOne({ email: email.toLowerCase() });
     if (existedEmail) {
       throw new Error("Email đã được sử dụng");
     }
 
-    // Check trùng username
+    /* Check trùng username */
     const existedUsername = await User.findOne({ username });
     if (existedUsername) {
       throw new Error("Username đã được sử dụng");
     }
 
-    // Hash password
+    /* Hash password */
     const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS) || 12;
     const passwordHash = await bcrypt.hash(password, saltRounds);
 
-    // Tạo mã xác thực 6 số
+    /* Tạo mã xác thực 6 số */
     const verificationToken = generateVerificationToken(); // 6 số
     const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24h
 
-    // Tạo user với trạng thái chưa xác thực
+    /* Tạo user với trạng thái chưa xác thực */
     const newUser = await User.create({
       name,
       username,
       email: email.toLowerCase().trim(),
       passwordHash,
       role: role || "employee",
-      isVerified: false, // ❗ Chưa xác thực
+      isVerified: false, /* Chưa xác thực */
       emailVerificationToken: verificationToken,
       emailVerificationExpires: verificationExpires,
     });
 
-    // 🚀 GỬI EMAIL XÁC THỰC NGAY
+    /* GỬI EMAIL XÁC THỰC NGAY */
     try {
       await sendVerificationEmail(email, verificationToken, username);
       console.log(
@@ -58,7 +58,7 @@ class AuthService {
       );
     } catch (emailError) {
       console.error("❌ Failed to send verification email:", emailError);
-      // Xóa user nếu không gửi được email
+      /* Xóa user nếu không gửi được email */
       await User.findByIdAndDelete(newUser._id);
       throw new Error("Không thể gửi email xác thực. Vui lòng thử lại.");
     }
@@ -79,27 +79,27 @@ class AuthService {
       throw new Error("Email hoặc mật khẩu không đúng");
     }
 
-    // ❗ KIỂM TRA XÁC THỰC EMAIL
+    /* KIỂM TRA XÁC THỰC EMAIL */
     if (!user.isVerified) {
       throw new Error(
         "Tài khoản chưa được xác thực. Vui lòng kiểm tra email và nhập mã xác thực."
       );
     }
 
-    // ❗ KIỂM TRA BAN
+    /* KIỂM TRA BAN */
     if (user.isBanned) {
       throw new Error(
         "Tài khoản đã bị khóa. Liên hệ admin để biết thêm chi tiết."
       );
     }
 
-    // Kiểm tra password
+    /* Kiểm tra password */
     const isValidPassword = await bcrypt.compare(password, user.passwordHash);
     if (!isValidPassword) {
       throw new Error("Email hoặc mật khẩu không đúng");
     }
 
-    // Tạo access token
+    /* Tạo access token */
     const accessToken = generateAccessToken(user._id);
 
     const userResponse = user.toJSON();
@@ -121,13 +121,13 @@ class AuthService {
       throw new Error("Mã xác thực không hợp lệ hoặc đã hết hạn");
     }
 
-    // ✅ XÁC THỰC THÀNH CÔNG
+    /* XÁC THỰC THÀNH CÔNG */
     user.isVerified = true;
     user.emailVerificationToken = undefined;
     user.emailVerificationExpires = undefined;
     await user.save();
 
-    // Gửi email chào mừng
+    /* Gửi email chào mừng */
     try {
       await sendWelcomeEmail(user.email, user.username);
       console.log(`✅ Sent welcome email to ${user.email}`);
@@ -189,7 +189,7 @@ class AuthService {
 
     await user.save();
 
-    // Gửi email chào mừng
+    /* Gửi email chào mừng */
     await sendWelcomeEmail(user.email, user.username);
 
     return { message: "Email đã được xác thực thành công" };
@@ -206,7 +206,7 @@ class AuthService {
       throw new Error("Tài khoản đã được xác thực");
     }
 
-    // Tạo mã mới
+    /* Tạo mã mới */
     const verificationToken = generateVerificationToken();
     const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
@@ -214,7 +214,7 @@ class AuthService {
     user.emailVerificationExpires = verificationExpires;
     await user.save();
 
-    // Gửi email
+    /* Gửi email */
     await sendVerificationEmail(email, verificationToken, user.username);
     console.log(
       `✅ Resent verification email to ${email} with code: ${verificationToken}`
@@ -231,7 +231,7 @@ class AuthService {
       throw new Error("Không tìm thấy user với email này");
     }
 
-    // Tạo reset token
+    /* Tạo reset token */
     const resetToken = generatePasswordResetToken();
     const resetExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 giờ
 
@@ -240,7 +240,7 @@ class AuthService {
 
     await user.save();
 
-    // Gửi email reset password
+    /* Gửi email reset password */
     await sendPasswordResetEmail(email, resetToken, user.username);
 
     return { message: "Email đặt lại mật khẩu đã được gửi" };
@@ -256,7 +256,7 @@ class AuthService {
       throw new Error("Token đặt lại mật khẩu không hợp lệ hoặc đã hết hạn");
     }
 
-    // Mã hóa mật khẩu mới
+    /* Mã hóa mật khẩu mới */
     const saltRounds = 12;
     const passwordHash = await bcrypt.hash(newPassword, saltRounds);
 
