@@ -18,7 +18,7 @@ const userSchema = new Schema(
     isVerified: { type: Boolean, default: false },
     isUnlimited: { type: Boolean, default: false },
 
-    /* Trạng thái tài khoản (thay vì status===inactive rời rạc) */
+    // Trạng thái tài khoản (thay vì status===inactive rời rạc) 
     accountStatus: {
       type: String,
       enum: ["active", "inactive", "banned"],
@@ -33,17 +33,17 @@ const userSchema = new Schema(
       required: true,
     },
 
-    /* Ban info */
+    // Ban info 
     isBanned: { type: Boolean, default: false, index: true },
     bannedAt: Date,
     banReason: String,
     bannedBy: { type: Schema.Types.ObjectId, ref: "User" },
 
-    /* Email verify */
+    // Email verify 
     emailVerificationToken: String,
     emailVerificationExpires: Date,
 
-    /* Password reset */
+    // Password reset 
     passwordResetToken: String,
     passwordResetExpires: Date,
 
@@ -52,7 +52,7 @@ const userSchema = new Schema(
   { timestamps: true }
 );
 
-/* Virtual: reverse relation to customers owned by this user */
+// Virtual: reverse relation to customers owned by this user 
 userSchema.virtual("customers", {
   ref: "Customer",
   localField: "_id",

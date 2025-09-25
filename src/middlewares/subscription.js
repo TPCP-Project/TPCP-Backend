@@ -1,13 +1,13 @@
 const Customer = require("../models/Customer");
 
-//Middleware kiểm tra subscription Pro
-// Chỉ cho phép user có subscription active sử dụng các tính năng premium
+/*Middleware kiểm tra subscription Pro
+ Chỉ cho phép user có subscription active sử dụng các tính năng premium */
 
 const requireProSubscription = async (req, res, next) => {
   try {
     const userId = req.user.id;
 
-    // Tìm customer của user
+    /* Tìm customer của user */
     const customer = await Customer.findOne({ ownerId: userId });
 
     if (!customer) {
@@ -19,7 +19,7 @@ const requireProSubscription = async (req, res, next) => {
       });
     }
 
-    // Kiểm tra subscription status
+    /* Kiểm tra subscription status */
     if (customer.subscriptionStatus !== "active") {
       return res.status(403).json({
         success: false,
@@ -30,7 +30,7 @@ const requireProSubscription = async (req, res, next) => {
       });
     }
 
-    // Kiểm tra subscription plan
+    /* Kiểm tra subscription plan */
     if (
       customer.subscriptionPlan !== "pro" &&
       customer.subscriptionPlan !== "enterprise"
@@ -44,12 +44,12 @@ const requireProSubscription = async (req, res, next) => {
       });
     }
 
-    // Kiểm tra hạn sử dụng
+    /* Kiểm tra hạn sử dụng */
     if (
       customer.subscriptionExpiresAt &&
       customer.subscriptionExpiresAt < new Date()
     ) {
-      // Cập nhật status thành expired
+      /* Cập nhật status thành expired */
       customer.subscriptionStatus = "expired";
       await customer.save();
 
@@ -62,7 +62,7 @@ const requireProSubscription = async (req, res, next) => {
       });
     }
 
-    // Thêm customer info vào request để sử dụng ở các middleware/controller khác
+    /* Thêm customer info vào request để sử dụng ở các middleware/controller khác */
     req.customer = customer;
     req.customerId = customer._id.toString();
 
@@ -95,7 +95,7 @@ const requireBasicSubscription = async (req, res, next) => {
       });
     }
 
-    // Kiểm tra subscription status
+    /* Kiểm tra subscription status */
     if (customer.subscriptionStatus !== "active") {
       return res.status(403).json({
         success: false,
@@ -106,7 +106,7 @@ const requireBasicSubscription = async (req, res, next) => {
       });
     }
 
-    // Kiểm tra hạn sử dụng
+    /* Kiểm tra hạn sử dụng */
     if (
       customer.subscriptionExpiresAt &&
       customer.subscriptionExpiresAt < new Date()
@@ -158,7 +158,7 @@ const requireFacebookIntegration = async (req, res, next) => {
       });
     }
 
-    // Kiểm tra subscription
+    /* Kiểm tra subscription */
     if (
       customer.subscriptionStatus !== "active" ||
       (customer.subscriptionPlan !== "pro" &&
@@ -172,7 +172,7 @@ const requireFacebookIntegration = async (req, res, next) => {
       });
     }
 
-    // Kiểm tra Facebook Page đã kết nối chưa
+    /* Kiểm tra Facebook Page đã kết nối chưa */
     if (!customer.fbPageId || !customer.fbPageAccessToken) {
       return res.status(403).json({
         success: false,
@@ -216,7 +216,7 @@ const addSubscriptionInfo = async (req, res, next) => {
     next();
   } catch (error) {
     console.error("[Add Subscription Info] Error:", error);
-    // Không block request, chỉ log error
+    /* Không block request, chỉ log error */
     next();
   }
 };

@@ -1,10 +1,10 @@
 const ProjectService = require("../services/ProjectService");
 
 class ProjectController {
-  /**
-   * Tạo project mới
-   * @route POST /api/projects
-   */
+
+//Tạo project mới
+//@route POST /api/projects
+
   async createProject(req, res) {
     try {
       const { name, description, auto_approve_members, settings } = req.body;
@@ -34,10 +34,9 @@ class ProjectController {
     }
   }
 
-  /**
-   * Lấy danh sách project của user
-   * @route GET /api/projects
-   */
+//Lấy danh sách project của user
+//@route GET /api/projects
+
   async getUserProjects(req, res) {
     try {
       const userId = req.user._id;
@@ -66,10 +65,9 @@ class ProjectController {
     }
   }
 
-  /**
-   * Lấy thông tin chi tiết project
-   * @route GET /api/projects/:projectId
-   */
+  //Lấy thông tin chi tiết project
+  //@route GET /api/projects/:projectId
+
   async getProjectById(req, res) {
     try {
       const { projectId } = req.params;
@@ -93,10 +91,9 @@ class ProjectController {
     }
   }
 
-  /**
-   * Cập nhật thông tin project
-   * @route PUT /api/projects/:projectId
-   */
+  //Cập nhật thông tin project
+  //@route PUT /api/projects/:projectId
+
   async updateProject(req, res) {
     try {
       const { projectId } = req.params;
@@ -128,10 +125,9 @@ class ProjectController {
     }
   }
 
-  /**
-   * Xóa project
-   * @route DELETE /api/projects/:projectId
-   */
+  //Xóa project
+  //@route DELETE /api/projects/:projectId 
+
   async deleteProject(req, res) {
     try {
       const { projectId } = req.params;
@@ -155,10 +151,10 @@ class ProjectController {
     }
   }
 
-  /**
-   * Lấy danh sách thành viên của project
-   * @route GET /api/projects/:projectId/members
-   */
+
+  //Lấy danh sách thành viên của project
+  //@route GET /api/projects/:projectId/members
+
   async getProjectMembers(req, res) {
     try {
       const { projectId } = req.params;
@@ -182,10 +178,12 @@ class ProjectController {
     }
   }
 
-  /**
-   * Rời khỏi project
-   * @route DELETE /api/projects/:projectId/leave
-   */
+  
+
+  //Rời khỏi project
+  //@route DELETE /api/projects/:projectId/leave
+
+ 
   async leaveProject(req, res) {
     try {
       const { projectId } = req.params;

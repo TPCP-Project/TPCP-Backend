@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-// Subtask schema
+/* Subtask schema */
 const subtaskSchema = new mongoose.Schema({
   title: {
     type: String,
@@ -75,12 +75,12 @@ const taskSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Indexes for KPI queries
+/* Indexes for KPI queries */
 taskSchema.index({ assignedTo: 1, status: 1, completedAt: 1 });
 taskSchema.index({ projectId: 1, sprint: 1 });
 taskSchema.index({ projectId: 1, status: 1 });
 
-// Auto-update isOverdue field
+/* Auto-update isOverdue field */
 taskSchema.pre('save', function(next) {
   if (this.dueDate && this.status !== 'APPROVED' && this.status !== 'Done') {
     this.isOverdue = new Date() > this.dueDate;
@@ -88,7 +88,7 @@ taskSchema.pre('save', function(next) {
     this.isOverdue = false;
   }
 
-  // Set completedAt when task is marked as APPROVED
+  /* Set completedAt when task is marked as APPROVED */
   if (this.status === 'APPROVED' && !this.completedAt) {
     this.completedAt = new Date();
   }

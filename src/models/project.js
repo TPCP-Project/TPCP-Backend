@@ -27,11 +27,11 @@ const projectSchema = new Schema(
       type: Boolean,
       default: false,
     },
-    // Đây là một trường mới để lưu trữ các cài đặt dành riêng cho project
+    /* Đây là một trường mới để lưu trữ các cài đặt dành riêng cho project */
     settings: {
       allowInvitationByMembers: { type: Boolean, default: true },
       requireApprovalForJoining: { type: Boolean, default: true },
-      autoDeletePendingRequests: { type: Number, default: 5 }, // Số ngày tự động xóa request chờ duyệt
+      autoDeletePendingRequests: { type: Number, default: 5 }, /* Số ngày tự động xóa request chờ duyệt */
     },
   },
   { timestamps: true }

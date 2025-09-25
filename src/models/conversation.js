@@ -3,7 +3,7 @@ const { Schema } = mongoose;
 
 const conversationSchema = new Schema(
   {
-    // Loại conversation
+    /* Loại conversation */
     type: {
       type: String,
       enum: ["project", "direct"],
@@ -11,26 +11,26 @@ const conversationSchema = new Schema(
       index: true,
     },
 
-    // Thông tin project (chỉ cho type: "project")
+    /* Thông tin project (chỉ cho type: "project") */
     project_id: {
       type: Schema.Types.ObjectId,
       ref: "Project",
       index: true,
     },
 
-    // Tên conversation
+    /* Tên conversation */
     name: {
       type: String,
       trim: true,
     },
 
-    // Mô tả conversation
+    /* Mô tả conversation */
     description: {
       type: String,
       trim: true,
     },
 
-    // Avatar conversation
+    /* Avatar conversation */
     avatar: {
       url: { type: String, default: "" },
       filename: String,
@@ -39,7 +39,7 @@ const conversationSchema = new Schema(
       uploadedAt: { type: Date, default: Date.now },
     },
 
-    // Người tạo conversation
+    /* Người tạo conversation */
     created_by: {
       type: Schema.Types.ObjectId,
       ref: "User",
@@ -47,7 +47,7 @@ const conversationSchema = new Schema(
       index: true,
     },
 
-    // Cài đặt conversation
+    /* Cài đặt conversation */
     settings: {
       allow_member_invite: { type: Boolean, default: true },
       allow_file_sharing: { type: Boolean, default: true },
@@ -56,7 +56,7 @@ const conversationSchema = new Schema(
       message_retention_days: { type: Number, default: 30 },
     },
 
-    // Trạng thái conversation
+    /* Trạng thái conversation */
     status: {
       type: String,
       enum: ["active", "archived", "deleted"],
@@ -64,7 +64,7 @@ const conversationSchema = new Schema(
       index: true,
     },
 
-    // Thống kê
+    /* Thống kê */
     stats: {
       total_messages: { type: Number, default: 0 },
       total_participants: { type: Number, default: 0 },

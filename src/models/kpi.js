@@ -80,7 +80,7 @@ const kpiSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// 🧮 Tự động tính tiến độ cho goals
+//  Tự động tính tiến độ cho goals
 kpiSchema.pre("save", function (next) {
   if (this.goals && this.goals.length > 0) {
     this.goals.forEach((goal) => {
@@ -94,7 +94,7 @@ kpiSchema.pre("save", function (next) {
   next();
 });
 
-// 🎯 Method để tính overall score
+//  Method để tính overall score
 kpiSchema.methods.calculateOverallScore = function() {
   const weights = {
     completionRate: 0.4,    // 40% - Completion rate
@@ -130,7 +130,7 @@ kpiSchema.methods.calculateOverallScore = function() {
   return this.overallScore;
 };
 
-// 🔑 Compound unique index để support multiple projects
+//  Compound unique index để support multiple projects
 kpiSchema.index({ employeeId: 1, projectId: 1, month: 1 }, { unique: true });
 
 module.exports = mongoose.model("Kpi", kpiSchema);

@@ -32,20 +32,20 @@ class SubscriptionController {
       //  LƯU MAPPING orderId → userId
       orderMapping.set(orderId, userId);
 
-      // Tạo URL thanh toán - LUÔN dùng backend return URL
+      /* Tạo URL thanh toán - LUÔN dùng backend return URL */
       const paymentResult = await paymentService.createPaymentUrl({
         amount: 1500000,
         orderId,
         orderDescription: `Đăng ký gói Pro AI Chatbot - User ${userId}`,
         customerInfo: {
           ...customerInfo,
-          // Fix IPv6 localhost issue
+          /* Fix IPv6 localhost issue */
           ipAddr:
             req.ip === "::1"
               ? "127.0.0.1"
               : req.ip || req.connection.remoteAddress,
         },
-        // QUAN TRỌNG: returnUrl phải là backend URL không phải frontend
+        /* QUAN TRỌNG: returnUrl phải là backend URL không phải frontend */
         returnUrl:
           process.env.VNPAY_RETURN_URL ||
           "http://localhost:4000/api/subscription/payment-return",
@@ -69,7 +69,7 @@ class SubscriptionController {
     }
   }
 
-  //Xử lý kết quả thanh toán từ VNPay
+  /*Xử lý kết quả thanh toán từ VNPay? */
 
   async handlePaymentReturn(req, res) {
     try {
@@ -162,9 +162,7 @@ class SubscriptionController {
     }
   }
 
-  /**
-   * Kiểm tra trạng thái subscription
-   */
+  //Kiểm tra trạng thái subscription
   async getSubscriptionStatus(req, res) {
     try {
       const userId = req.user.id;
@@ -217,9 +215,7 @@ class SubscriptionController {
     }
   }
 
-  /**
-   * Gia hạn subscription
-   */
+  //Gia hạn subscription
   async renewSubscription(req, res) {
     try {
       const userId = req.user.id;
@@ -265,9 +261,7 @@ class SubscriptionController {
     }
   }
 
-  /**
-   * Hủy subscription
-   */
+  //Hủy subscription
   async cancelSubscription(req, res) {
     try {
       const userId = req.user.id;
@@ -296,9 +290,8 @@ class SubscriptionController {
     }
   }
 
-  /**
-   * Lấy thông tin thanh toán
-   */
+  //Lấy thông tin thanh toán 
+
   async getPaymentHistory(req, res) {
     try {
       const userId = req.user.id;
@@ -331,9 +324,8 @@ class SubscriptionController {
     }
   }
 
-  /**
-   * Helper: Lấy userId từ orderId
-   */
+  //Helper: Lấy userId từ orderId 
+
   getUserIdFromOrderId(orderId) {
     return orderMapping.get(orderId) || null;
   }

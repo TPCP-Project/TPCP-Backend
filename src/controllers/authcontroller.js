@@ -7,8 +7,8 @@ const {
 
 class AuthController {
   
-  // * POST /auth/register
-  //* Đăng ký + gửi email 6 số
+  /* POST /auth/register
+  Đăng ký + gửi email 6 số */
    
   async register(req, res) {
     try {
@@ -42,8 +42,8 @@ class AuthController {
     }
   }
 
-  // POST /auth/login
-  //Chỉ cho phép login nếu đã xác thực
+  /* POST /auth/login
+  Chỉ cho phép login nếu đã xác thực */
   
   async login(req, res) {
     try {
@@ -82,8 +82,8 @@ class AuthController {
     }
   }
 
-  //POST /auth/verify-signup
-  //Xác thực mã 6 số: { email, code }
+  /* POST /auth/verify-signup
+  Xác thực mã 6 số: { email, code } */
   async verifySignup(req, res) {
     try {
       const { email, code } = req.body;
@@ -111,8 +111,8 @@ class AuthController {
     }
   }
 
-   //POST /auth/resend-verification
-   //Gửi lại mã 6 số
+   /* POST /auth/resend-verification
+   Gửi lại mã 6 số */
   async resendVerificationEmail(req, res) {
     try {
       const { email } = req.body;

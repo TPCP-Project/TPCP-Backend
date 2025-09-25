@@ -2,10 +2,10 @@ const Task = require("../models/task");
 const User = require("../models/user");
 const ProjectMember = require("../models/projectMember");
 
-// 🟢 Lấy toàn bộ task (của các project user tham gia)
+/* Lấy toàn bộ task (của các project user tham gia) */
 exports.getAllTasks = async (req, res) => {
   try {
-    // Lấy tất cả projects mà user là member
+    /* Lấy tất cả projects mà user là member */
     const memberships = await ProjectMember.find({
       user_id: req.user._id,
       status: "active"
@@ -13,7 +13,7 @@ exports.getAllTasks = async (req, res) => {
 
     const projectIds = memberships.map(m => m.project_id);
 
-    // Lấy tất cả tasks thuộc các projects đó
+    /* Lấy tất cả tasks thuộc các projects đó */
     const tasks = await Task.find({ projectId: { $in: projectIds } })
       .populate('projectId', 'name')
       .populate('createdBy', 'username email')
@@ -27,7 +27,7 @@ exports.getAllTasks = async (req, res) => {
   }
 };
 
-// 🟢 Lấy chi tiết task theo ID
+/* Lấy chi tiết task theo ID */
 exports.getTaskById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -48,7 +48,7 @@ exports.getTaskById = async (req, res) => {
   }
 };
 
-// 🟢 Xóa task (chỉ owner/admin của project)
+/* Xóa task (chỉ owner/admin của project) */
 exports.deleteTask = async (req, res) => {
   try {
     const { id } = req.params;
@@ -56,7 +56,7 @@ exports.deleteTask = async (req, res) => {
     const task = await Task.findById(id);
     if (!task) return res.status(404).json({ success: false, message: "Task not found" });
 
-    // Kiểm tra membership trong project
+    /* Kiểm tra membership trong project */
     const membership = await ProjectMember.findOne({
       project_id: task.projectId,
       user_id: req.user._id,
@@ -70,7 +70,7 @@ exports.deleteTask = async (req, res) => {
       });
     }
 
-    // Chỉ owner/admin mới được xóa task
+    /* Chỉ owner/admin mới được xóa task */
     if (membership.role !== "owner" && membership.role !== "admin") {
       return res.status(403).json({
         success: false,
@@ -86,7 +86,7 @@ exports.deleteTask = async (req, res) => {
   }
 };
 
-// 🟢 Tạo task mới (chỉ owner/admin của project)
+/* Tạo task mới (chỉ owner/admin của project) */
 exports.createTask = async (req, res) => {
   try {
     const {
@@ -101,7 +101,7 @@ exports.createTask = async (req, res) => {
       labels
     } = req.body;
 
-    // Kiểm tra xem user có phải owner/admin của project không
+    /* Kiểm tra xem user có phải owner/admin của project không */
     const membership = await ProjectMember.findOne({
       project_id: projectId,
       user_id: req.user._id,
@@ -115,7 +115,7 @@ exports.createTask = async (req, res) => {
       });
     }
 
-    // Chỉ owner hoặc admin mới được tạo task
+    /* Chỉ owner hoặc admin mới được tạo task */
     if (membership.role !== "owner" && membership.role !== "admin") {
       return res.status(403).json({
         success: false,
@@ -123,7 +123,7 @@ exports.createTask = async (req, res) => {
       });
     }
 
-    // Kiểm tra assignedTo có phải member của project không
+    /* Kiểm tra assignedTo có phải member của project không */
     if (assignedTo) {
       const assigneeMembership = await ProjectMember.findOne({
         project_id: projectId,
@@ -153,7 +153,7 @@ exports.createTask = async (req, res) => {
       createdBy: req.user._id,
     });
 
-    // Populate để trả về đầy đủ thông tin
+    /* Populate để trả về đầy đủ thông tin */
     const populatedTask = await Task.findById(task._id)
       .populate("assignedTo", "username email")
       .populate("createdBy", "username email")
@@ -166,7 +166,7 @@ exports.createTask = async (req, res) => {
   }
 };
 
-// 🟢 Cập nhật task
+/* Cập nhật task */
 exports.updateTask = async (req, res) => {
   try {
     const { id } = req.params;
@@ -182,7 +182,7 @@ exports.updateTask = async (req, res) => {
 
     console.log('Task found, projectId:', task.projectId);
 
-    // Kiểm tra membership trong project
+    /* Kiểm tra membership trong project */
     const membership = await ProjectMember.findOne({
       project_id: task.projectId,
       user_id: req.user._id,
@@ -198,7 +198,7 @@ exports.updateTask = async (req, res) => {
       });
     }
 
-    // Owner/Admin có thể update tất cả, member chỉ update status
+    /* Owner/Admin có thể update tất cả, member chỉ update status */
     if (membership.role === "owner" || membership.role === "admin") {
       if (title) task.title = title;
       if (description !== undefined) task.description = description;
@@ -244,7 +244,7 @@ exports.updateTask = async (req, res) => {
   }
 };
 
-// 🟢 Gán task cho thành viên (owner/admin của project)
+/* Gán task cho thành viên (owner/admin của project) */
 exports.assignTask = async (req, res) => {
   try {
     const { userId } = req.body;
@@ -259,7 +259,7 @@ exports.assignTask = async (req, res) => {
       return res.status(404).json({ success: false, message: "Task not found" });
     }
 
-    // Kiểm tra membership của người gán task
+    /* Kiểm tra membership của người gán task */
     const membership = await ProjectMember.findOne({
       project_id: task.projectId,
       user_id: req.user._id,
@@ -273,7 +273,7 @@ exports.assignTask = async (req, res) => {
       });
     }
 
-    // Chỉ owner/admin mới được gán task
+    /* Chỉ owner/admin mới được gán task */
     if (membership.role !== "owner" && membership.role !== "admin") {
       return res.status(403).json({
         success: false,
@@ -281,7 +281,7 @@ exports.assignTask = async (req, res) => {
       });
     }
 
-    // Kiểm tra user được gán có phải member của project không
+    /* Kiểm tra user được gán có phải member của project không */
     const assigneeMembership = await ProjectMember.findOne({
       project_id: task.projectId,
       user_id: userId,
@@ -295,11 +295,11 @@ exports.assignTask = async (req, res) => {
       });
     }
 
-    // Gán nhân viên
+    /* Gán nhân viên */
     task.assignedTo = userId;
     await task.save();
 
-    // ✅ Populate lại task để frontend có username/email
+    /* Populate lại task để frontend có username/email */
     const updatedTask = await Task.findById(id)
       .populate("assignedTo", "username email")
       .populate("createdBy", "username email")
@@ -316,7 +316,7 @@ exports.assignTask = async (req, res) => {
   }
 };
 
-// 🟢 Cập nhật trạng thái task (cho Kanban drag & drop)
+/* Cập nhật trạng thái task (cho Kanban drag & drop) */
 exports.updateTaskStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -331,7 +331,7 @@ exports.updateTaskStatus = async (req, res) => {
       return res.status(404).json({ success: false, message: "Task not found" });
     }
 
-    // Kiểm tra membership
+    /* Kiểm tra membership */
     const membership = await ProjectMember.findOne({
       project_id: task.projectId,
       user_id: req.user._id,
@@ -345,7 +345,7 @@ exports.updateTaskStatus = async (req, res) => {
       });
     }
 
-    // Owner/admin có thể update bất kỳ task nào, member chỉ update task của mình
+    /* Owner/admin có thể update bất kỳ task nào, member chỉ update task của mình */
     if (membership.role !== "owner" && membership.role !== "admin") {
       if (!task.assignedTo || task.assignedTo.toString() !== req.user._id.toString()) {
         return res.status(403).json({
@@ -374,13 +374,13 @@ exports.updateTaskStatus = async (req, res) => {
   }
 };
 
-// 🟢 Lấy tasks theo board (Kanban columns)
+/* Lấy tasks theo board (Kanban columns) */
 exports.getTasksByBoard = async (req, res) => {
   try {
     const { projectId } = req.params;
     const { sprint } = req.query;
 
-    // Kiểm tra membership
+    /* Kiểm tra membership */
     const membership = await ProjectMember.findOne({
       project_id: projectId,
       user_id: req.user._id,
@@ -394,19 +394,19 @@ exports.getTasksByBoard = async (req, res) => {
       });
     }
 
-    // Build query
+    /* Build query */
     const query = { projectId };
     if (sprint) {
       query.sprint = sprint;
     }
 
-    // Lấy tất cả tasks
+    /* Lấy tất cả tasks */
     const tasks = await Task.find(query)
       .populate("assignedTo", "username email")
       .populate("createdBy", "username email")
       .sort({ createdAt: -1 });
 
-    // Nhóm tasks theo status (columns)
+    /* Nhóm tasks theo status (columns) */
     const columns = {
       TO_DO: [],
       DRAFTING: [],
@@ -432,7 +432,7 @@ exports.getTasksByBoard = async (req, res) => {
   }
 };
 
-// 🟢 Thêm subtask vào task
+/*  Thêm subtask vào task */
 exports.addSubtask = async (req, res) => {
   try {
     const { id } = req.params;
@@ -447,7 +447,7 @@ exports.addSubtask = async (req, res) => {
       return res.status(404).json({ success: false, message: "Task not found" });
     }
 
-    // Kiểm tra quyền
+    /* Kiểm tra quyền */
     const membership = await ProjectMember.findOne({
       project_id: task.projectId,
       user_id: req.user._id,
@@ -480,7 +480,7 @@ exports.addSubtask = async (req, res) => {
   }
 };
 
-// 🟢 Cập nhật subtask
+/*  Cập nhật subtask */
 exports.updateSubtask = async (req, res) => {
   try {
     const { id, subtaskId } = req.params;
@@ -517,7 +517,7 @@ exports.updateSubtask = async (req, res) => {
   }
 };
 
-// 🟢 Xóa subtask
+/*  Xóa subtask */
 exports.deleteSubtask = async (req, res) => {
   try {
     const { id, subtaskId } = req.params;

@@ -4,7 +4,7 @@ const SubscriptionPackage = require("../models/subscriptionPackage");
 const AdminNotification = require("../models/adminNotification");
 const nodemailer = require("nodemailer");
 
-// Middleware để check admin role
+/* Middleware để check admin role */
 exports.requireAdmin = (req, res, next) => {
   if (req.user.role !== "admin") {
     return res.status(403).json({
@@ -15,7 +15,7 @@ exports.requireAdmin = (req, res, next) => {
   next();
 };
 
-//USER MANAGEMENT
+/* USER MANAGEMENT */
 
 // Lấy danh sách tất cả users
 exports.getAllUsers = async (req, res) => {
@@ -60,7 +60,7 @@ exports.getAllUsers = async (req, res) => {
   }
 };
 
-// Lấy chi tiết user
+/* Lấy chi tiết user */
 exports.getUserDetails = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -73,7 +73,7 @@ exports.getUserDetails = async (req, res) => {
       });
     }
 
-    // Lấy thông tin purchases của user
+    /* Lấy thông tin purchases của user */
     const purchases = await Purchase.find({ userId })
       .populate("packageId", "name price duration")
       .sort({ createdAt: -1 });
@@ -95,7 +95,7 @@ exports.getUserDetails = async (req, res) => {
   }
 };
 
-// Cập nhật role user
+/* Cập nhật role user */
 exports.updateUserRole = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -136,7 +136,7 @@ exports.updateUserRole = async (req, res) => {
   }
 };
 
-// Ban/Unban user
+/* Ban/Unban user */
 exports.banUser = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -175,7 +175,7 @@ exports.banUser = async (req, res) => {
   }
 };
 
-// Gửi email cảnh báo cho user
+/* Gửi email cảnh báo cho user */
 exports.sendWarningEmail = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -189,7 +189,7 @@ exports.sendWarningEmail = async (req, res) => {
       });
     }
 
-    // Check if email is configured
+    /* Check if email is configured */
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
       return res.status(501).json({
         success: false,
@@ -198,12 +198,12 @@ exports.sendWarningEmail = async (req, res) => {
       });
     }
 
-    // Configure email transporter (same pattern as projectEmail.js)
+    /* Configure email transporter (same pattern as projectEmail.js) */
     try {
       const transporter = nodemailer.createTransport({
         host: process.env.SMTP_HOST,
         port: Number(process.env.SMTP_PORT),
-        secure: Number(process.env.SMTP_PORT) === 465, // true for 465, false for 587
+        secure: Number(process.env.SMTP_PORT) === 465, /* true for 465, false for 587 */
         auth: {
           user: process.env.EMAIL_USER,
           pass: process.env.EMAIL_PASSWORD,
@@ -250,9 +250,9 @@ exports.sendWarningEmail = async (req, res) => {
   }
 };
 
-//PACKAGE MANAGEMENT
+/* PACKAGE MANAGEMENT */
 
-// 📦 Tạo gói subscription
+// Tạo gói subscription
 exports.createPackage = async (req, res) => {
   try {
     const packageData = req.body;
@@ -276,7 +276,7 @@ exports.createPackage = async (req, res) => {
   }
 };
 
-// 📦 Lấy danh sách packages
+//  Lấy danh sách packages
 exports.getAllPackages = async (req, res) => {
   try {
     const { isActive } = req.query;
@@ -300,7 +300,7 @@ exports.getAllPackages = async (req, res) => {
   }
 };
 
-// 🔧 Cập nhật package
+//  Cập nhật package
 exports.updatePackage = async (req, res) => {
   try {
     const { packageId } = req.params;
@@ -334,7 +334,7 @@ exports.updatePackage = async (req, res) => {
   }
 };
 
-// ❌ Xóa package
+//  Xóa package
 exports.deletePackage = async (req, res) => {
   try {
     const { packageId } = req.params;
@@ -364,7 +364,7 @@ exports.deletePackage = async (req, res) => {
 
 // =================== PURCHASE MANAGEMENT ===================
 
-// 💰 Lấy danh sách purchases
+//  Lấy danh sách purchases
 exports.getAllPurchases = async (req, res) => {
   try {
     const { page = 1, limit = 20, status, userId } = req.query;
@@ -428,7 +428,7 @@ exports.getAllPurchases = async (req, res) => {
   }
 };
 
-// 🔧 Cập nhật trạng thái purchase
+//  Cập nhật trạng thái purchase
 exports.updatePurchaseStatus = async (req, res) => {
   try {
     const { purchaseId } = req.params;
@@ -490,7 +490,7 @@ exports.updatePurchaseStatus = async (req, res) => {
 
 // =================== NOTIFICATIONS ===================
 
-// 🔔 Lấy thông báo admin
+//  Lấy thông báo admin
 exports.getAdminNotifications = async (req, res) => {
   try {
     const { page = 1, limit = 20, isRead } = req.query;
@@ -530,7 +530,7 @@ exports.getAdminNotifications = async (req, res) => {
   }
 };
 
-// ✅ Đánh dấu đã đọc thông báo
+//  Đánh dấu đã đọc thông báo
 exports.markNotificationAsRead = async (req, res) => {
   try {
     const { notificationId } = req.params;
@@ -567,7 +567,7 @@ exports.markNotificationAsRead = async (req, res) => {
   }
 };
 
-// 📊 Dashboard statistics
+//  Dashboard statistics
 exports.getDashboardStats = async (req, res) => {
   try {
     const Customer = require("../models/Customer");

@@ -3,7 +3,7 @@ const User = require("../models/user");
 const Task = require("../models/task");
 const ProjectMember = require("../models/projectMember");
 
-// 🟢 Tạo KPI (Manager)
+//  Tạo KPI (Manager)
 exports.createKpi = async (req, res) => {
   try {
     if (req.user.role !== "manager")
@@ -26,7 +26,7 @@ exports.createKpi = async (req, res) => {
   }
 };
 
-// 🟡 Cập nhật KPI
+//  Cập nhật KPI
 exports.updateKpi = async (req, res) => {
   try {
     if (req.user.role !== "manager")
@@ -45,7 +45,7 @@ exports.updateKpi = async (req, res) => {
   }
 };
 
-// 🔍 Lấy danh sách KPI
+//  Lấy danh sách KPI
 exports.getKpis = async (req, res) => {
   try {
     const filter = {};
@@ -66,7 +66,7 @@ exports.getKpis = async (req, res) => {
   }
 };
 
-// 🔍 Lấy chi tiết KPI
+//  Lấy chi tiết KPI
 exports.getKpiById = async (req, res) => {
   try {
     const kpi = await Kpi.findById(req.params.id).populate("employeeId", "name email role");
@@ -85,7 +85,7 @@ exports.getKpiById = async (req, res) => {
   }
 };
 
-// ❌ Xóa KPI
+//  Xóa KPI
 exports.deleteKpi = async (req, res) => {
   try {
     if (req.user.role !== "manager")
@@ -100,7 +100,7 @@ exports.deleteKpi = async (req, res) => {
   }
 };
 
-// 🎯 Tính KPI tự động từ tasks
+//  Tính KPI tự động từ tasks
 exports.calculateKpiFromTasks = async (userId, projectId, month) => {
   try {
     // Parse month (format: "YYYY-MM")
@@ -165,7 +165,7 @@ exports.calculateKpiFromTasks = async (userId, projectId, month) => {
   }
 };
 
-// 📊 API: Tính và lưu KPI cho user
+//  API: Tính và lưu KPI cho user
 exports.calculateAndSaveKpi = async (req, res) => {
   try {
     const { userId, projectId, month } = req.body;
@@ -219,7 +219,7 @@ exports.calculateAndSaveKpi = async (req, res) => {
   }
 };
 
-// 📊 API: Lấy KPI của project (all members)
+//  API: Lấy KPI của project (all members)
 exports.getProjectKpiDashboard = async (req, res) => {
   try {
     const { projectId } = req.params;
