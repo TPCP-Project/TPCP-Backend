@@ -13,6 +13,9 @@ const {
 
 class AuthService {
   async register(userData) {
+    if (!userData || Object.keys(userData).length === 0) {
+      throw new Error("Payload đăng ký rỗng hoặc không hợp lệ");
+    }
     const { name, username, email, password, role } = userData;
 
     // Check trùng email
