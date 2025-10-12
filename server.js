@@ -7,8 +7,12 @@ const cors = require("cors");
 const rateLimit = require("express-rate-limit");
 const connectDB = require("./src/config/database");
 const authRoutes = require("./src/routes/auth");
+const projectRoutes = require("./src/routes/projectRoutes");
 const projectInvitationRoutes = require("./src/routes/projectInvitationRoutes");
+const profileRoutes = require("./src/routes/profileRoutes");
+const chatRoutes = require("./src/routes/chatRoutes");
 const { setupCronJobs } = require("./src/config/cronJobs");
+const SocketManager = require("./src/config/socket");
 
 const app = express();
 
@@ -51,7 +55,10 @@ app.use(limiter);
 
 // === KHAI BÁO ROUTES ===
 app.use("/auth", authRoutes);
-app.use("/api", projectInvitationRoutes); // Thêm routes mới
+app.use("/api", projectRoutes); // Routes quản lý project
+app.use("/api", projectInvitationRoutes); // Routes invitation
+app.use("/api", profileRoutes); // Routes quản lý profile
+app.use("/api", chatRoutes); // Routes chat
 
 app.get("/health", (_req, res) =>
   res.json({ ok: true, message: "Server is healthy" })
@@ -77,7 +84,23 @@ async function main() {
   setupCronJobs();
 
   const port = process.env.PORT || 4000;
-  app.listen(port, () => console.log(`🚀 API listening on port: ${port}`));
+  const server = app.listen(port, () =>
+    console.log(`🚀 API listening on port: ${port}`)
+  );
+
+  // Khởi tạo Socket.IO
+  const { Server } = require("socket.io");
+  const io = new Server(server, {
+    cors: {
+      origin: process.env.CLIENT_URL || "http://localhost:3000",
+      methods: ["GET", "POST"],
+    },
+  });
+
+  // Khởi tạo Socket Manager
+  global.socketManager = new SocketManager(io);
+
+  console.log(`🔌 Socket.IO server running on port: ${port}`);
 }
 
 if (process.env.NODE_ENV !== "test") {

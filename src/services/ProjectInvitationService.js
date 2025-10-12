@@ -3,7 +3,7 @@ const Project = require("../models/project");
 const ProjectMember = require("../models/projectMember");
 const ProjectInvitation = require("../models/ProjectInvitation");
 const ProjectJoinRequest = require("../models/ProjectJoinRequest");
-const User = require("../models/User");
+const User = require("../models/user");
 const {
   sendProjectInvitation,
   sendJoinRequestApproved,
@@ -582,3 +582,5 @@ class ProjectInvitationService {
     return invitations;
   }
 }
+
+module.exports = new ProjectInvitationService();
