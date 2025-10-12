@@ -6,14 +6,14 @@ const User = require("../models/user");
 const orderMapping = new Map();
 
 class SubscriptionController {
-  // Tạo URL thanh toán cho gói Pro
+  // Tạo URL thanh toán cho gói Pro 
 
   async createPayment(req, res) {
     try {
       const userId = req.user.id;
       const { customerInfo = {}, returnUrl } = req.body;
 
-      // Kiểm tra user đã có customer chưa
+      // Kiểm tra user đã có customer chưa 
       const existingCustomer = await Customer.findOne({ ownerId: userId });
       if (
         existingCustomer &&
@@ -26,10 +26,10 @@ class SubscriptionController {
         });
       }
 
-      // Tạo mã giao dịch
+      // Tạo mã giao dịch 
       const orderId = paymentService.generateOrderId();
 
-      //  LƯU MAPPING orderId → userId
+      // LƯU MAPPING orderId → userId
       orderMapping.set(orderId, userId);
 
       // Tạo URL thanh toán - LUÔN dùng backend return URL
@@ -69,7 +69,7 @@ class SubscriptionController {
     }
   }
 
-  //Xử lý kết quả thanh toán từ VNPay
+  //Xử lý kết quả thanh toán từ VNPay 
 
   async handlePaymentReturn(req, res) {
     try {
@@ -102,11 +102,11 @@ class SubscriptionController {
         );
       }
 
-      // Kiểm tra đã tạo customer chưa
+      // Kiểm tra đã tạo customer chưa 
       let customer = await Customer.findOne({ ownerId: userId });
 
       if (!customer) {
-        // Tạo customer mới
+        //Tạo customer mới
         customer = new Customer({
           email: user.email,
           businessName: user.name || `Business ${userId}`,
@@ -115,7 +115,7 @@ class SubscriptionController {
           ownerId: userId,
           subscriptionExpiresAt: new Date(
             Date.now() + 30 * 24 * 60 * 60 * 1000
-          ), // 30 ngày
+          ), //30 ngày 
           paymentInfo: {
             orderId,
             transactionNo: verifyResult.transactionNo,
@@ -128,7 +128,7 @@ class SubscriptionController {
         await customer.save();
         console.log(`[Subscription] Created new customer: ${customer._id}`);
       } else {
-        // Cập nhật subscription
+        //Cập nhật subscription 
         customer.subscriptionPlan = "pro";
         customer.subscriptionStatus = "active";
         customer.subscriptionExpiresAt = new Date(
@@ -146,7 +146,7 @@ class SubscriptionController {
         console.log(`[Subscription] Updated customer: ${customer._id}`);
       }
 
-      // Xóa mapping sau khi xử lý xong
+      //Xóa mapping sau khi xử lý xong
       orderMapping.delete(orderId);
 
       return res.redirect(
@@ -162,9 +162,7 @@ class SubscriptionController {
     }
   }
 
-  /**
-   * Kiểm tra trạng thái subscription
-   */
+  /* Kiểm tra trạng thái subscription */
   async getSubscriptionStatus(req, res) {
     try {
       const userId = req.user.id;
@@ -217,9 +215,7 @@ class SubscriptionController {
     }
   }
 
-  /**
-   * Gia hạn subscription
-   */
+  /* Gia hạn subscription */
   async renewSubscription(req, res) {
     try {
       const userId = req.user.id;
@@ -234,7 +230,7 @@ class SubscriptionController {
 
       const orderId = paymentService.generateOrderId();
 
-      // Lưu mapping cho renew
+      //Lưu mapping cho renew
       orderMapping.set(orderId, userId);
 
       const paymentResult = await paymentService.createPaymentUrl({
@@ -265,9 +261,7 @@ class SubscriptionController {
     }
   }
 
-  /**
-   * Hủy subscription
-   */
+  /* Hủy subscription */
   async cancelSubscription(req, res) {
     try {
       const userId = req.user.id;
@@ -296,9 +290,7 @@ class SubscriptionController {
     }
   }
 
-  /**
-   * Lấy thông tin thanh toán
-   */
+  /* Lấy thông tin thanh toán */
   async getPaymentHistory(req, res) {
     try {
       const userId = req.user.id;
@@ -331,9 +323,7 @@ class SubscriptionController {
     }
   }
 
-  /**
-   * Helper: Lấy userId từ orderId
-   */
+  /* Helper: Lấy userId từ orderId */
   getUserIdFromOrderId(orderId) {
     return orderMapping.get(orderId) || null;
   }
