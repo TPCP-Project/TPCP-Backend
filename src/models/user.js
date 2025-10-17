@@ -52,6 +52,13 @@ const userSchema = new Schema(
   { timestamps: true }
 );
 
+// Virtual: reverse relation to customers owned by this user
+userSchema.virtual("customers", {
+  ref: "Customer",
+  localField: "_id",
+  foreignField: "ownerId",
+});
+
 userSchema.pre("save", function (next) {
   if (this.isBanned && !this.bannedAt) this.bannedAt = new Date();
   if (!this.isBanned) {
