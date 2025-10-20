@@ -76,7 +76,7 @@ const authorizeRoles = (...allowedRoles) => {
   };
 };
 
-// ✅ Chỉ cho phép Admin
+// Chỉ cho phép Admin
 const requireAdmin = (req, res, next) => {
   if (!req.user || req.user.role !== "admin") {
     return res.status(403).json({
