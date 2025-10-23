@@ -3,9 +3,7 @@ const ProjectMember = require("../models/projectMember");
 const mongoose = require("mongoose");
 
 class ProjectService {
-  /**
-   * Tạo project mới
-   */
+  //Tạo project mới
   async createProject(
     userId,
     name,
@@ -14,7 +12,7 @@ class ProjectService {
     settings = {}
   ) {
     try {
-      // Tạo project mới
+      /* Tạo project mới */
       const project = new Project({
         name,
         description,
@@ -30,7 +28,7 @@ class ProjectService {
 
       await project.save();
 
-      // Tự động thêm owner làm member với role owner
+      /* Tự động thêm owner làm member với role owner */
       const projectMember = new ProjectMember({
         project_id: project._id,
         user_id: userId,
@@ -45,7 +43,7 @@ class ProjectService {
 
       await projectMember.save();
 
-      // Populate thông tin user
+      /* Populate thông tin user */
       const populatedProject = await Project.findById(project._id)
         .populate("owner_id", "name email avatar")
         .lean();
@@ -59,19 +57,17 @@ class ProjectService {
     }
   }
 
-  /**
-   * Lấy danh sách project của user
-   */
+  //Lấy danh sách project của user
   async getUserProjects(userId, status = null, page = 1, limit = 10) {
     try {
       const query = {};
 
-      // Nếu có filter theo status
+      /* Nếu có filter theo status */
       if (status) {
         query.status = status;
       }
 
-      // Tìm các project mà user là member
+      /* Tìm các project mà user là member */
       const userProjects = await ProjectMember.find({
         user_id: userId,
         status: "active",
@@ -79,7 +75,7 @@ class ProjectService {
 
       const projectIds = userProjects.map((pm) => pm.project_id);
 
-      // Query projects với pagination
+      /* Query projects với pagination */
       const projects = await Project.find({
         _id: { $in: projectIds },
         ...query,
@@ -90,7 +86,7 @@ class ProjectService {
         .limit(limit)
         .lean();
 
-      // Thêm thông tin role của user trong từng project
+      /* Thêm thông tin role của user trong từng project */
       const projectsWithRole = projects.map((project) => {
         const memberInfo = userProjects.find(
           (pm) => pm.project_id.toString() === project._id.toString()
@@ -101,7 +97,7 @@ class ProjectService {
         };
       });
 
-      // Đếm tổng số projects
+      /* Đếm tổng số projects */
       const totalProjects = await Project.countDocuments({
         _id: { $in: projectIds },
         ...query,
@@ -122,12 +118,10 @@ class ProjectService {
     }
   }
 
-  /**
-   * Lấy thông tin chi tiết project
-   */
+  //Lấy thông tin chi tiết project
   async getProjectById(projectId, userId) {
     try {
-      // Kiểm tra user có phải member của project không
+      /* Kiểm tra user có phải member của project không */
       const membership = await ProjectMember.findOne({
         project_id: projectId,
         user_id: userId,
@@ -156,12 +150,10 @@ class ProjectService {
     }
   }
 
-  /**
-   * Cập nhật thông tin project
-   */
+  //Cập nhật thông tin project
   async updateProject(projectId, userId, updateData) {
     try {
-      // Kiểm tra quyền owner hoặc admin
+      /* Kiểm tra quyền owner hoặc admin */
       const membership = await ProjectMember.findOne({
         project_id: projectId,
         user_id: userId,
@@ -192,12 +184,10 @@ class ProjectService {
     }
   }
 
-  /**
-   * Xóa project
-   */
+  //Xóa project
   async deleteProject(projectId, userId) {
     try {
-      // Chỉ owner mới có thể xóa project
+      /* Chỉ owner mới có thể xóa project */
       const membership = await ProjectMember.findOne({
         project_id: projectId,
         user_id: userId,
@@ -209,10 +199,10 @@ class ProjectService {
         throw new Error("Chỉ chủ project mới có thể xóa project");
       }
 
-      // Xóa tất cả members của project
+      /* Xóa tất cả members của project */
       await ProjectMember.deleteMany({ project_id: projectId });
 
-      // Xóa project
+      /* Xóa project */
       await Project.findByIdAndDelete(projectId);
 
       return {
@@ -223,12 +213,10 @@ class ProjectService {
     }
   }
 
-  /**
-   * Lấy danh sách thành viên của project
-   */
+  //Lấy danh sách thành viên của project
   async getProjectMembers(projectId, userId) {
     try {
-      // Kiểm tra user có phải member của project không
+      /* Kiểm tra user có phải member của project không */
       const membership = await ProjectMember.findOne({
         project_id: projectId,
         user_id: userId,
@@ -260,9 +248,7 @@ class ProjectService {
     }
   }
 
-  /**
-   * Rời khỏi project
-   */
+  //Rời khỏi project
   async leaveProject(projectId, userId) {
     try {
       const membership = await ProjectMember.findOne({
@@ -275,14 +261,14 @@ class ProjectService {
         throw new Error("Bạn không phải thành viên của project này");
       }
 
-      // Owner không thể rời khỏi project
+      /* Owner không thể rời khỏi project */
       if (membership.role === "owner") {
         throw new Error(
           "Chủ project không thể rời khỏi project. Hãy chuyển quyền sở hữu hoặc xóa project."
         );
       }
 
-      // Cập nhật status thành inactive
+      /* Cập nhật status thành inactive */
       await ProjectMember.findByIdAndUpdate(membership._id, {
         status: "inactive",
       });

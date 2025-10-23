@@ -5,17 +5,17 @@ const { authenticateToken, requireVerified } = require("../middlewares/auth");
 
 // === ROUTES QUẢN LÝ PROJECT ===
 
-// Tạo project mới
+/* Tạo project mới */
 router.post("/projects", authenticateToken, requireVerified, (req, res) => {
   ProjectController.createProject(req, res);
 });
 
-// Lấy danh sách project của user
+/* Lấy danh sách project của user */
 router.get("/projects", authenticateToken, requireVerified, (req, res) => {
   ProjectController.getUserProjects(req, res);
 });
 
-// Lấy thông tin chi tiết project
+/* Lấy thông tin chi tiết project */
 router.get(
   "/projects/:projectId",
   authenticateToken,
@@ -25,7 +25,7 @@ router.get(
   }
 );
 
-// Cập nhật thông tin project
+/* Cập nhật thông tin project */
 router.put(
   "/projects/:projectId",
   authenticateToken,
@@ -35,7 +35,7 @@ router.put(
   }
 );
 
-// Xóa project
+/* Xóa project */
 router.delete(
   "/projects/:projectId",
   authenticateToken,
@@ -45,7 +45,7 @@ router.delete(
   }
 );
 
-// Lấy danh sách thành viên của project
+/* Lấy danh sách thành viên của project */
 router.get(
   "/projects/:projectId/members",
   authenticateToken,
@@ -55,7 +55,7 @@ router.get(
   }
 );
 
-// Rời khỏi project
+/* Rời khỏi project */
 router.delete(
   "/projects/:projectId/leave",
   authenticateToken,
