@@ -96,10 +96,9 @@ class ChatController {
     }
   }
 
-  /**
-   * Lấy thông tin chi tiết conversation
-   * @route GET /api/chat/conversations/:conversationId
-   */
+  //Lấy thông tin chi tiết conversation
+  // @route GET /api/chat/conversations/:conversationId
+
   async getConversationById(req, res) {
     try {
       const { conversationId } = req.params;
@@ -126,10 +125,9 @@ class ChatController {
     }
   }
 
-  /**
-   * Lấy danh sách messages trong conversation
-   * @route GET /api/chat/conversations/:conversationId/messages
-   */
+  //Lấy danh sách messages trong conversation
+  //@route GET /api/chat/conversations/:conversationId/messages
+
   async getConversationMessages(req, res) {
     try {
       const { conversationId } = req.params;
@@ -160,10 +158,9 @@ class ChatController {
     }
   }
 
-  /**
-   * Gửi message
-   * @route POST /api/chat/conversations/:conversationId/messages
-   */
+  // Gửi message
+  // @route POST /api/chat/conversations/:conversationId/messages
+
   async sendMessage(req, res) {
     try {
       const { conversationId } = req.params;
@@ -200,10 +197,9 @@ class ChatController {
     }
   }
 
-  /**
-   * Cập nhật message
-   * @route PUT /api/chat/messages/:messageId
-   */
+  // Cập nhật message
+  // @route PUT /api/chat/messages/:messageId
+
   async updateMessage(req, res) {
     try {
       const { messageId } = req.params;
@@ -232,10 +228,9 @@ class ChatController {
     }
   }
 
-  /**
-   * Xóa message
-   * @route DELETE /api/chat/messages/:messageId
-   */
+  //Xóa message
+  //@route DELETE /api/chat/messages/:messageId
+  //
   async deleteMessage(req, res) {
     try {
       const { messageId } = req.params;
@@ -259,10 +254,9 @@ class ChatController {
     }
   }
 
-  /**
-   * Đánh dấu đã đọc messages
-   * @route PUT /api/chat/conversations/:conversationId/read
-   */
+  // Đánh dấu đã đọc messages
+  //@route PUT /api/chat/conversations/:conversationId/read
+
   async markAsRead(req, res) {
     try {
       const { conversationId } = req.params;
@@ -286,10 +280,9 @@ class ChatController {
     }
   }
 
-  /**
-   * Thêm reaction cho message
-   * @route POST /api/chat/messages/:messageId/reactions
-   */
+  //Thêm reaction cho message
+  //@route POST /api/chat/messages/:messageId/reactions
+
   async addReaction(req, res) {
     try {
       const { messageId } = req.params;
@@ -314,10 +307,9 @@ class ChatController {
     }
   }
 
-  /**
-   * Xóa reaction
-   * @route DELETE /api/chat/messages/:messageId/reactions
-   */
+  // Xóa reaction
+  // @route DELETE /api/chat/messages/:messageId/reactions
+
   async removeReaction(req, res) {
     try {
       const { messageId } = req.params;
@@ -342,10 +334,9 @@ class ChatController {
     }
   }
 
-  /**
-   * Lấy danh sách participants trong conversation
-   * @route GET /api/chat/conversations/:conversationId/participants
-   */
+  //Lấy danh sách participants trong conversation
+  // @route GET /api/chat/conversations/:conversationId/participants
+
   async getConversationParticipants(req, res) {
     try {
       const { conversationId } = req.params;
@@ -372,10 +363,9 @@ class ChatController {
     }
   }
 
-  /**
-   * Rời khỏi conversation
-   * @route DELETE /api/chat/conversations/:conversationId/leave
-   */
+  //Rời khỏi conversation
+  // @route DELETE /api/chat/conversations/:conversationId/leave
+
   async leaveConversation(req, res) {
     try {
       const { conversationId } = req.params;
