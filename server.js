@@ -10,9 +10,17 @@ const authRoutes = require("./src/routes/auth");
 const projectRoutes = require("./src/routes/projectRoutes");
 const projectInvitationRoutes = require("./src/routes/projectInvitationRoutes");
 const profileRoutes = require("./src/routes/profileRoutes");
+const productRoutes = require("./src/routes/productRoutes");
+const chatbotRoutes = require("./src/routes/chatbotRoutes");
+const customerRoutes = require("./src/routes/customerRoutes");
 const chatRoutes = require("./src/routes/chatRoutes");
+
 const taskRoutes = require("./src/routes/taskRoutes");
 const kpiRoutes = require('./src/routes/kpiRoutes');
+
+const facebookRoutes = require("./src/routes/facebookRoutes");
+const subscriptionRoutes = require("./src/routes/subscriptionRoutes");
+
 const { setupCronJobs } = require("./src/config/cronJobs");
 const SocketManager = require("./src/config/socket");
 
@@ -22,10 +30,11 @@ const app = express();
 // === CẤU HÌNH MIDDLEWARES ===
 
 // 1. Cấu hình CORS một cách an toàn
+// Trust only safe proxy ranges to satisfy express-rate-limit without being permissive
+app.set("trust proxy", ["loopback", "linklocal", "uniquelocal"]);
 const allowlist = [
   process.env.CLIENT_URL, // ví dụ: http://localhost:5173
   "http://127.0.0.1:5173",
-  "http://localhost:3000",
 ].filter(Boolean); // Lọc ra các giá trị undefined/null nếu có
 
 const corsOptions = {
@@ -62,8 +71,16 @@ app.use("/api", projectRoutes); // Routes quản lý project
 app.use("/api", projectInvitationRoutes); // Routes invitation
 app.use("/api", profileRoutes); // Routes quản lý profile
 app.use("/api", chatRoutes); // Routes chat
+
 app.use("/api", taskRoutes); // Routes quản lý task
 app.use('/api/kpi', kpiRoutes); // Routes quản lý KPI
+
+
+app.use("/api/products", productRoutes); // Routes products
+app.use("/api/chatbot", chatbotRoutes); // Routes chatbot
+app.use("/api", customerRoutes); // Routes customers
+app.use("/api", facebookRoutes); // Facebook manual connect + webhook
+app.use("/api/subscription", subscriptionRoutes); // Subscription & payment routes
 
 
 app.get("/health", (_req, res) =>
