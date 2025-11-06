@@ -50,7 +50,7 @@ async function authenticateToken(req, res, next) {
   }
 }
 
-// Middleware kiểm tra xác thực email
+// Kiểm tra xác thực email
 const requireVerified = (req, res, next) => {
   if (!req.user.isVerified) {
     return res.status(403).json({
@@ -62,6 +62,7 @@ const requireVerified = (req, res, next) => {
   next();
 };
 
+// ✅ Kiểm tra quyền theo role
 const authorizeRoles = (...allowedRoles) => {
   return (req, res, next) => {
     const { role } = req.user;
@@ -74,81 +75,33 @@ const authorizeRoles = (...allowedRoles) => {
     next();
   };
 };
+
+// ✅ Chỉ cho phép Admin
 const requireAdmin = (req, res, next) => {
-  try {
-    // Check if user exists and has admin role
-    if (!req.user) {
-      return res.status(401).json({
-        success: false,
-        message: "Authentication required",
-      });
-    }
-
-    if (req.user.role !== "admin") {
-      return res.status(403).json({
-        success: false,
-        message: "Admin access required",
-      });
-    }
-
-    next();
-  } catch (error) {
-    console.error("RequireAdmin middleware error:", error);
-    res.status(500).json({
+  if (!req.user || req.user.role !== "admin") {
+    return res.status(403).json({
       success: false,
-      message: "Internal server error",
+      message: "Chỉ admin mới có quyền thực hiện hành động này",
     });
   }
+  next();
 };
-// const requireSubscription = (requiredTiers = []) => {
-//   return async (req, res, next) => {
-//     try {
-//       if (!req.user) {
-//         return res.status(401).json({
-//           success: false,
-//           message: 'Authentication required'
-//         });
-//       }
 
-//       const hasActiveSubscription = req.user.subscription &&
-//         req.user.subscription.status === 'active' &&
-//         new Date(req.user.subscription.expiresAt) > new Date();
-
-//       if (!hasActiveSubscription) {
-//         return res.status(403).json({
-//           success: false,
-//           message: 'Active subscription required',
-//           code: 'SUBSCRIPTION_REQUIRED'
-//         });
-//       }
-
-//       if (requiredTiers.length > 0) {
-//         const userTier = req.user.subscription.tier;
-//         if (!requiredTiers.includes(userTier)) {
-//           return res.status(403).json({
-//             success: false,
-//             message: `Subscription tier '${requiredTiers.join(' or ')}' required`,
-//             code: 'INSUFFICIENT_TIER'
-//           });
-//         }
-//       }
-
-//       next();
-//     } catch (error) {
-//       console.error('Subscription check error:', error);
-//       return res.status(500).json({
-//         success: false,
-//         message: 'Internal server error'
-//       });
-//     }
-//   };
-// };
+// ✅ Chỉ cho phép Manager
+const requireManager = (req, res, next) => {
+  if (!req.user || req.user.role !== "manager") {
+    return res.status(403).json({
+      success: false,
+      message: "Chỉ manager mới có quyền thực hiện hành động này",
+    });
+  }
+  next();
+};
 
 module.exports = {
   authenticateToken,
   requireVerified,
   requireAdmin,
-
+  requireManager,
   authorizeRoles,
-  // requireSubscription,
 };
