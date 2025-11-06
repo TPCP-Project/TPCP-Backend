@@ -11,8 +11,10 @@ const projectRoutes = require("./src/routes/projectRoutes");
 const projectInvitationRoutes = require("./src/routes/projectInvitationRoutes");
 const profileRoutes = require("./src/routes/profileRoutes");
 const chatRoutes = require("./src/routes/chatRoutes");
+const taskRoutes = require("./src/routes/taskRoutes");
 const { setupCronJobs } = require("./src/config/cronJobs");
 const SocketManager = require("./src/config/socket");
+
 
 const app = express();
 
@@ -59,6 +61,8 @@ app.use("/api", projectRoutes); // Routes quản lý project
 app.use("/api", projectInvitationRoutes); // Routes invitation
 app.use("/api", profileRoutes); // Routes quản lý profile
 app.use("/api", chatRoutes); // Routes chat
+app.use("/api", taskRoutes); // Routes quản lý task
+
 
 app.get("/health", (_req, res) =>
   res.json({ ok: true, message: "Server is healthy" })
