@@ -1,15 +1,79 @@
-import mongoose from 'mongoose';
+const mongoose = require("mongoose");
 
-const KpiSchema = new mongoose.Schema({
-  user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  manager_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  month: { type: Number, required: true, min: 1, max: 12 },
-  year: { type: Number, required: true, min: 2000 },
-  target_value: { type: mongoose.Schema.Types.Decimal128, required: true },
-  current_value: { type: mongoose.Schema.Types.Decimal128, default: 0 },
-  metric_type: { type: String, enum: ['revenue', 'leads', 'tasks'], required: true },
-}, { timestamps: { createdAt: 'created_at', updatedAt: false } });
+const goalSchema = new mongoose.Schema(
+  {
+    title: {
+      type: String,
+      required: [true, "Goal title is required"],
+    },
+    target: {
+      type: Number,
+      required: [true, "Target value is required"],
+      min: 0,
+    },
+    actual: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    unit: {
+      type: String,
+      required: [true, "Unit is required"],
+    },
+    weight: {
+      type: Number,
+      required: [true, "Weight is required"],
+      min: 1,
+      max: 100,
+    },
+    progress: {
+      type: Number,
+      default: 0,
+    },
+  },
+  { _id: false }
+);
 
-KpiSchema.index({ user_id: 1, month: 1, year: 1, metric_type: 1 }, { unique: true });
+const kpiSchema = new mongoose.Schema(
+  {
+    employeeId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    month: {
+      type: String,
+      required: [true, "Month is required"],
+      match: [/^\d{4}-(0[1-9]|1[0-2])$/, "Month must be in YYYY-MM format"],
+    },
+    goals: {
+      type: [goalSchema],
+      validate: {
+        validator: (arr) => arr.length > 0,
+        message: "At least one goal is required",
+      },
+    },
+    status: {
+      type: String,
+      enum: ["Pending", "InProgress", "Completed"],
+      default: "Pending",
+    },
+  },
+  { timestamps: true }
+);
 
-export default mongoose.model('Kpi', KpiSchema);
+// 🧮 Tự động tính tiến độ
+kpiSchema.pre("save", function (next) {
+  if (this.goals && this.goals.length > 0) {
+    this.goals.forEach((goal) => {
+      if (goal.target > 0) {
+        goal.progress = Math.min((goal.actual / goal.target) * 100, 100);
+      } else {
+        goal.progress = 0;
+      }
+    });
+  }
+  next();
+});
+
+module.exports = mongoose.model("Kpi", kpiSchema);
