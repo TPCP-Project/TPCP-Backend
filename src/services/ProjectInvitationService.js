@@ -141,13 +141,6 @@ class ProjectInvitationService {
       project_name: project.name,
     };
   }
-
-  /**
-   * Xử lý yêu cầu tham gia project bằng mã mời
-   * @param {string} inviteCode - Mã mời
-   * @param {string} userId - ID người dùng xin tham gia
-   * @returns {Promise<Object>} - Kết quả xử lý yêu cầu
-   */
   async joinByInviteCode(inviteCode, userId) {
     // Tìm mã mời
     const invitation = await ProjectInvitation.findOne({
@@ -196,10 +189,11 @@ class ProjectInvitationService {
         project_name: project.name,
       };
     }
-
-    // Tìm người tạo mã mời
-    const inviter = await User.findById(invitation.created_by);
-
+    await ProjectJoinRequest.deleteMany({
+      project_id: project._id,
+      user_id: userId,
+      status: { $in: ["accepted", "rejected"] },
+    });
     // Tạo yêu cầu tham gia mới
     pendingRequest = await ProjectJoinRequest.create({
       project_id: project._id,
@@ -209,9 +203,21 @@ class ProjectInvitationService {
       request_date: new Date(),
     });
 
-    // Nếu project cài đặt auto_approve_members = true, tự động phê duyệt
     if (project.auto_approve_members) {
-      return this.approveJoinRequest(pendingRequest._id, project.owner_id);
+      console.log("🔄 Auto-approving join request...", {
+        requestId: pendingRequest._id.toString(),
+        projectId: project._id.toString(),
+        userId: userId.toString(),
+        ownerId: project.owner_id.toString(),
+      });
+
+      const result = await this.approveJoinRequest(
+        pendingRequest._id.toString(),
+        project.owner_id.toString()
+      );
+
+      console.log("✅ Auto-approve result:", result);
+      return result;
     }
 
     // Gửi thông báo cho chủ project
@@ -231,7 +237,6 @@ class ProjectInvitationService {
       project_name: project.name,
     };
   }
-
   /**
    * Lấy danh sách yêu cầu tham gia đang chờ xử lý cho project
    * @param {string} projectId - ID của project
@@ -300,23 +305,28 @@ class ProjectInvitationService {
       throw new Error("Project không tồn tại");
     }
 
+    const isOwner = project.owner_id.toString() === approverId.toString();
     // Kiểm tra người dùng có quyền phê duyệt không
-    const approverMembership = await ProjectMember.findOne({
-      project_id: project._id,
-      user_id: approverId,
-      status: "active",
-    });
+    if (!isOwner) {
+      // Chỉ kiểm tra quyền nếu KHÔNG phải owner
+      const approverMembership = await ProjectMember.findOne({
+        project_id: project._id,
+        user_id: approverId,
+        status: "active",
+      });
 
-    if (!approverMembership) {
-      throw new Error("Bạn không phải là thành viên của project này");
-    }
+      if (!approverMembership) {
+        throw new Error("Bạn không phải là thành viên của project này");
+      }
 
-    if (
-      approverMembership.role !== "owner" &&
-      approverMembership.role !== "admin" &&
-      !approverMembership.permissions.canApproveMembers
-    ) {
-      throw new Error("Bạn không có quyền phê duyệt yêu cầu tham gia project");
+      if (
+        approverMembership.role !== "admin" &&
+        !approverMembership.permissions.canApproveMembers
+      ) {
+        throw new Error(
+          "Bạn không có quyền phê duyệt yêu cầu tham gia project"
+        );
+      }
     }
 
     // Kiểm tra xem người dùng đã là thành viên của project chưa

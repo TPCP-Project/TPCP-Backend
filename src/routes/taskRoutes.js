@@ -13,17 +13,28 @@ router.get("/tasks", authenticateToken, taskController.getAllTasks);
 // 🟡 GET CHI TIẾT TASK THEO ID
 router.get("/tasks/:id", authenticateToken, taskController.getTaskById);
 
-// 🟢 CREATE TASK MỚI (Manager)
-router.post("/tasks", authenticateToken, requireManager, taskController.createTask);
+// 🟢 CREATE TASK MỚI (Owner/Admin của project)
+router.post("/tasks", authenticateToken, taskController.createTask);
 
-// 🟡 UPDATE TASK (Manager)
-router.put("/tasks/:id", authenticateToken, requireManager, taskController.updateTask);
+// 🟡 UPDATE TASK (Owner/Admin hoặc member được assign)
+router.put("/tasks/:id", authenticateToken, taskController.updateTask);
 
-// 🔴 DELETE TASK (Manager)
-router.delete("/tasks/:id", authenticateToken, requireManager, taskController.deleteTask);
+// 🔴 DELETE TASK (Owner/Admin của project)
+router.delete("/tasks/:id", authenticateToken, taskController.deleteTask);
 
-// 🟢 GÁN TASK CHO THÀNH VIÊN (Manager)
-router.put("/tasks/:id/assign", authenticateToken, requireManager, taskController.assignTask);
+// 🟢 GÁN TASK CHO THÀNH VIÊN (Owner/Admin của project)
+router.put("/tasks/:id/assign", authenticateToken, taskController.assignTask);
+
+// 🟢 CẬP NHẬT TRẠNG THÁI TASK (Drag & Drop Kanban)
+router.put("/tasks/:id/status", authenticateToken, taskController.updateTaskStatus);
+
+// 🟢 LẤY TASKS THEO BOARD (Kanban Columns)
+router.get("/tasks/board/:projectId", authenticateToken, taskController.getTasksByBoard);
+
+// 🟢 QUẢN LÝ SUBTASKS
+router.post("/tasks/:id/subtasks", authenticateToken, taskController.addSubtask);
+router.put("/tasks/:id/subtasks/:subtaskId", authenticateToken, taskController.updateSubtask);
+router.delete("/tasks/:id/subtasks/:subtaskId", authenticateToken, taskController.deleteSubtask);
 
 // ===========================================================
 // 💬 COMMENT ROUTES (Manager hoặc nhân viên được giao task)
