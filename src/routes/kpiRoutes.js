@@ -21,4 +21,10 @@ router.get("/:id", kpiController.getKpiById);
 // ❌ Xóa KPI
 router.delete("/:id", kpiController.deleteKpi);
 
+// 📊 Tính KPI tự động từ tasks
+router.post("/calculate", kpiController.calculateAndSaveKpi);
+
+// 📊 Lấy KPI Dashboard của project
+router.get("/project/:projectId/dashboard", kpiController.getProjectKpiDashboard);
+
 module.exports = router;
