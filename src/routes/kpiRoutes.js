@@ -3,22 +3,22 @@ const router = express.Router();
 const kpiController = require("../controllers/kpicontroller");
 const { authenticateToken } = require("../middlewares/auth");
 
-// ✅ Tất cả routes yêu cầu đăng nhập
+// 🔐 Bảo vệ tất cả route
 router.use(authenticateToken);
 
 // 🟢 Tạo KPI
-router.post("/", kpiController.createKpi);
+router.post("/kpi", kpiController.createKpi);
 
 // 🟡 Cập nhật KPI
-router.put("/:id", kpiController.updateKpi);
+router.put("/kpi/:id", kpiController.updateKpi);
 
 // 🔍 Lấy danh sách KPI
-router.get("/", kpiController.getKpis);
+router.get("/kpi", kpiController.getKpis);
 
 // 🔍 Lấy chi tiết KPI
-router.get("/:id", kpiController.getKpiById);
+router.get("/kpi/:id", kpiController.getKpiById);
 
 // ❌ Xóa KPI
-router.delete("/:id", kpiController.deleteKpi);
+router.delete("/kpi/:id", kpiController.deleteKpi);
 
 module.exports = router;

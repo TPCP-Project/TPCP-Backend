@@ -63,7 +63,7 @@ app.use("/api", projectInvitationRoutes); // Routes invitation
 app.use("/api", profileRoutes); // Routes quản lý profile
 app.use("/api", chatRoutes); // Routes chat
 app.use("/api", taskRoutes); // Routes quản lý task
-app.use('/api/kpi', kpiRoutes); // Routes quản lý KPI
+app.use('/api/', kpiRoutes); // Routes quản lý KPI
 
 
 app.get("/health", (_req, res) =>

@@ -4,27 +4,24 @@ const User = require("../models/user");
 // 🟢 Tạo KPI (Manager)
 exports.createKpi = async (req, res) => {
   try {
+    const { employeeId, month, goals } = req.body;
     if (req.user.role !== "manager")
       return res.status(403).json({ message: "Only Manager can create KPI" });
 
-    const employee = await User.findById(req.body.employeeId);
+    const employee = await User.findById(employeeId);
     if (!employee)
       return res.status(404).json({ message: "Employee not found" });
 
-    const newKpi = new Kpi({
-      employeeId: req.body.employeeId,
-      month: req.body.month,
-      goals: req.body.goals,
-    });
-
+    const newKpi = new Kpi({ employeeId, month, goals });
     await newKpi.save();
+
     res.status(201).json({ message: "KPI created successfully", kpiId: newKpi._id });
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
 };
 
-// 🟡 Cập nhật KPI
+// 🟡 Cập nhật KPI (Manager)
 exports.updateKpi = async (req, res) => {
   try {
     if (req.user.role !== "manager")
@@ -35,6 +32,7 @@ exports.updateKpi = async (req, res) => {
 
     if (req.body.month) kpi.month = req.body.month;
     if (req.body.goals) kpi.goals = req.body.goals;
+    if (req.body.status) kpi.status = req.body.status;
 
     await kpi.save();
     res.json({ message: "KPI updated successfully", kpiId: kpi._id });
@@ -47,11 +45,8 @@ exports.updateKpi = async (req, res) => {
 exports.getKpis = async (req, res) => {
   try {
     const filter = {};
-    if (req.user.role === "employee") {
-      filter.employeeId = req.user._id;
-    } else if (req.query.employeeId) {
-      filter.employeeId = req.query.employeeId;
-    }
+    if (req.user.role === "employee") filter.employeeId = req.user._id;
+    if (req.query.employeeId) filter.employeeId = req.query.employeeId;
     if (req.query.month) filter.month = req.query.month;
 
     const list = await Kpi.find(filter)

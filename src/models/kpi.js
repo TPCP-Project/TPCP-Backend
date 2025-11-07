@@ -2,34 +2,12 @@ const mongoose = require("mongoose");
 
 const goalSchema = new mongoose.Schema(
   {
-    title: {
-      type: String,
-      required: [true, "Goal title is required"],
-    },
-    target: {
-      type: Number,
-      required: [true, "Target value is required"],
-      min: 0,
-    },
-    actual: {
-      type: Number,
-      default: 0,
-      min: 0,
-    },
-    unit: {
-      type: String,
-      required: [true, "Unit is required"],
-    },
-    weight: {
-      type: Number,
-      required: [true, "Weight is required"],
-      min: 1,
-      max: 100,
-    },
-    progress: {
-      type: Number,
-      default: 0,
-    },
+    title: { type: String, required: true },
+    target: { type: Number, required: true, min: 0 },
+    actual: { type: Number, default: 0, min: 0 },
+    unit: { type: String, required: true },
+    weight: { type: Number, required: true, min: 1, max: 100 },
+    progress: { type: Number, default: 0 },
   },
   { _id: false }
 );
@@ -43,8 +21,8 @@ const kpiSchema = new mongoose.Schema(
     },
     month: {
       type: String,
-      required: [true, "Month is required"],
-      match: [/^\d{4}-(0[1-9]|1[0-2])$/, "Month must be in YYYY-MM format"],
+      required: true,
+      match: [/^\d{4}-(0[1-9]|1[0-2])$/, "Month must be YYYY-MM format"],
     },
     goals: {
       type: [goalSchema],
@@ -62,7 +40,7 @@ const kpiSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// 🧮 Tự động tính tiến độ
+// 🧮 Tự động tính tiến độ trung bình
 kpiSchema.pre("save", function (next) {
   if (this.goals && this.goals.length > 0) {
     this.goals.forEach((goal) => {

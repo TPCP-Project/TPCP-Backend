@@ -1,7 +1,7 @@
 const Comment = require("../models/comment");
 const Task = require("../models/task");
 
-// 🟢 Thêm bình luận vào task
+// Thêm bình luận vào task
 exports.addComment = async (req, res) => {
   try {
     const { taskId } = req.params;
@@ -15,7 +15,7 @@ exports.addComment = async (req, res) => {
     const task = await Task.findById(taskId);
     if (!task) return res.status(404).json({ message: "Task không tồn tại" });
 
-    // 🔒 Chỉ cho phép Manager hoặc nhân viên được giao task
+    // Chỉ cho phép Manager hoặc nhân viên được giao task
     const isManager = user.role?.toLowerCase() === "manager";
     const isAssignedEmployee = task.assignedTo?.toString() === user._id.toString();
 
@@ -42,7 +42,7 @@ exports.addComment = async (req, res) => {
   }
 };
 
-// 🟡 Lấy danh sách bình luận theo task
+// Lấy danh sách bình luận theo task
 exports.getCommentsByTask = async (req, res) => {
   try {
     const { taskId } = req.params;
