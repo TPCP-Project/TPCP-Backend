@@ -41,6 +41,11 @@ const kpiSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    projectId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Project",
+      required: true,
+    },
     month: {
       type: String,
       required: [true, "Month is required"],
@@ -48,21 +53,34 @@ const kpiSchema = new mongoose.Schema(
     },
     goals: {
       type: [goalSchema],
-      validate: {
-        validator: (arr) => arr.length > 0,
-        message: "At least one goal is required",
-      },
+      default: [],
+    },
+    taskMetrics: {
+      totalTasksAssigned: { type: Number, default: 0 },
+      tasksCompleted: { type: Number, default: 0 },
+      tasksInProgress: { type: Number, default: 0 },
+      tasksBlocked: { type: Number, default: 0 },
+      tasksOverdue: { type: Number, default: 0 },
+      completionRate: { type: Number, default: 0 },
+      onTimeRate: { type: Number, default: 0 },
+      averageCompletionTime: { type: Number, default: 0 },
+    },
+    overallScore: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 100,
     },
     status: {
       type: String,
-      enum: ["Pending", "InProgress", "Completed"],
+      enum: ["Pending", "InProgress", "Completed", "Good", "Warning", "Critical"],
       default: "Pending",
     },
   },
   { timestamps: true }
 );
 
-// 🧮 Tự động tính tiến độ
+// 🧮 Tự động tính tiến độ cho goals
 kpiSchema.pre("save", function (next) {
   if (this.goals && this.goals.length > 0) {
     this.goals.forEach((goal) => {
@@ -75,5 +93,44 @@ kpiSchema.pre("save", function (next) {
   }
   next();
 });
+
+// 🎯 Method để tính overall score
+kpiSchema.methods.calculateOverallScore = function() {
+  const weights = {
+    completionRate: 0.4,    // 40% - Completion rate
+    onTimeRate: 0.3,        // 30% - On-time completion
+    blockedPenalty: -0.1,   // -10% - Penalty for blocked tasks
+  };
+
+  let score = 0;
+
+  // Calculate from taskMetrics
+  if (this.taskMetrics) {
+    score += (this.taskMetrics.completionRate || 0) * weights.completionRate;
+    score += (this.taskMetrics.onTimeRate || 0) * weights.onTimeRate;
+
+    // Penalty for blocked tasks
+    if (this.taskMetrics.totalTasksAssigned > 0) {
+      const blockedRatio = (this.taskMetrics.tasksBlocked / this.taskMetrics.totalTasksAssigned) * 100;
+      score += blockedRatio * weights.blockedPenalty;
+    }
+  }
+
+  this.overallScore = Math.max(0, Math.min(100, Math.round(score)));
+
+  // Update status based on score
+  if (this.overallScore >= 70) {
+    this.status = "Good";
+  } else if (this.overallScore >= 50) {
+    this.status = "Warning";
+  } else {
+    this.status = "Critical";
+  }
+
+  return this.overallScore;
+};
+
+// 🔑 Compound unique index để support multiple projects
+kpiSchema.index({ employeeId: 1, projectId: 1, month: 1 }, { unique: true });
 
 module.exports = mongoose.model("Kpi", kpiSchema);
