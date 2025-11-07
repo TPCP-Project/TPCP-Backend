@@ -1,30 +1,31 @@
 const Task = require("../models/task");
 const User = require("../models/user");
+const Kpi = require("../models/kpi"); // ✅ thêm
 
 // 🟢 Lấy toàn bộ task
 exports.getAllTasks = async (req, res) => {
   try {
     let tasks;
 
-    if (req.user.role === 'manager') {
+    if (req.user.role === "manager") {
       tasks = await Task.find()
-        .populate('projectId', 'name')
-        .populate('createdBy', 'username email')
-        .populate('assignedTo', 'username email')
+        .populate("projectId", "name")
+        .populate("createdBy", "username email")
+        .populate("assignedTo", "username email")
         .sort({ createdAt: -1 });
     } else {
       // Nhân viên chỉ thấy task được giao
       tasks = await Task.find({ assignedTo: req.user._id })
-        .populate('projectId', 'name')
-        .populate('createdBy', 'username email')
-        .populate('assignedTo', 'username email')
+        .populate("projectId", "name")
+        .populate("createdBy", "username email")
+        .populate("assignedTo", "username email")
         .sort({ createdAt: -1 });
     }
 
     res.status(200).json({ success: true, tasks });
   } catch (error) {
-    console.error('Get Tasks Error:', error);
-    res.status(500).json({ success: false, message: 'Server error' });
+    console.error("Get Tasks Error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
@@ -32,11 +33,10 @@ exports.getAllTasks = async (req, res) => {
 exports.getTaskById = async (req, res) => {
   try {
     const { id } = req.params;
-
     const task = await Task.findById(id)
       .populate("createdBy", "username email")
       .populate("projectId", "name")
-      .populate("assignedTo", "username email"); // ✅ thêm dòng này
+      .populate("assignedTo", "username email");
 
     if (!task) {
       return res.status(404).json({ success: false, message: "Task not found" });
@@ -55,14 +55,19 @@ exports.deleteTask = async (req, res) => {
     const { id } = req.params;
 
     const task = await Task.findById(id);
-    if (!task) return res.status(404).json({ success: false, message: "Task not found" });
+    if (!task)
+      return res.status(404).json({ success: false, message: "Task not found" });
 
     if (req.user.role !== "manager") {
-      return res.status(403).json({ success: false, message: "Only manager can delete tasks" });
+      return res
+        .status(403)
+        .json({ success: false, message: "Only manager can delete tasks" });
     }
 
     await Task.findByIdAndDelete(id);
-    res.status(200).json({ success: true, message: "Task deleted successfully" });
+    res
+      .status(200)
+      .json({ success: true, message: "Task deleted successfully" });
   } catch (error) {
     console.error("Delete Task Error:", error);
     res.status(500).json({ success: false, message: "Server error" });
@@ -72,7 +77,7 @@ exports.deleteTask = async (req, res) => {
 // 🟢 Manager tạo task mới
 exports.createTask = async (req, res) => {
   try {
-    const { projectId, title, description, dueDate } = req.body;
+    const { projectId, title, description, dueDate, kpiId } = req.body;
 
     const task = await Task.create({
       projectId,
@@ -81,6 +86,7 @@ exports.createTask = async (req, res) => {
       dueDate,
       createdBy: req.user._id,
       status: "In_Progress",
+      kpiId, // ✅ liên kết KPI nếu có
     });
 
     res.status(201).json({ success: true, message: "Task created", task });
@@ -90,15 +96,17 @@ exports.createTask = async (req, res) => {
   }
 };
 
-// 🟢 Cập nhật task
+// 🟢 Cập nhật task (và tự động cập nhật KPI)
 exports.updateTask = async (req, res) => {
   try {
     const { id } = req.params;
     const { title, description, dueDate, status } = req.body;
 
     const task = await Task.findById(id);
-    if (!task) return res.status(404).json({ success: false, message: "Task not found" });
+    if (!task)
+      return res.status(404).json({ success: false, message: "Task not found" });
 
+    // ✅ Quyền cập nhật
     if (req.user.role === "manager") {
       task.title = title || task.title;
       task.description = description || task.description;
@@ -106,10 +114,45 @@ exports.updateTask = async (req, res) => {
       task.status = status || task.status;
     } else {
       if (status) task.status = status;
-      else return res.status(403).json({ success: false, message: "You can only update the status" });
+      else
+        return res.status(403).json({
+          success: false,
+          message: "You can only update the status",
+        });
     }
 
     await task.save();
+
+    // ✅ Nếu task liên kết KPI và chuyển sang Done → cập nhật KPI
+    if (task.kpiId && status === "Done") {
+      const kpi = await Kpi.findById(task.kpiId);
+      if (kpi) {
+        const totalTasks = await Task.countDocuments({ kpiId: task.kpiId });
+        const completedTasks = await Task.countDocuments({
+          kpiId: task.kpiId,
+          status: "Done",
+        });
+
+        const progress = Math.round((completedTasks / totalTasks) * 100);
+
+        // Cập nhật goal đầu tiên (nếu có)
+        if (kpi.goals?.length > 0) {
+          kpi.goals[0].actual = completedTasks;
+          kpi.goals[0].progress = progress;
+        }
+
+        kpi.status =
+          progress >= 100
+            ? "Completed"
+            : progress > 0
+            ? "InProgress"
+            : "Pending";
+
+        await kpi.save();
+        console.log(`🔁 KPI ${kpi._id} updated: ${progress}%`);
+      }
+    }
+
     res.status(200).json({ success: true, message: "Task updated", task });
   } catch (error) {
     console.error("Update Task Error:", error);
@@ -124,7 +167,9 @@ exports.assignTask = async (req, res) => {
     const { id } = req.params;
 
     if (!userId) {
-      return res.status(400).json({ success: false, message: "userId is required" });
+      return res
+        .status(400)
+        .json({ success: false, message: "userId is required" });
     }
 
     const task = await Task.findById(id);
@@ -132,17 +177,16 @@ exports.assignTask = async (req, res) => {
       return res.status(404).json({ success: false, message: "Task not found" });
     }
 
-    // (Optional) kiểm tra user tồn tại
     const userExists = await User.findById(userId);
     if (!userExists) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
     }
 
-    // Gán nhân viên
     task.assignedTo = userId;
     await task.save();
 
-    // ✅ Populate lại task để frontend có username/email
     const updatedTask = await Task.findById(id)
       .populate("assignedTo", "username email")
       .populate("createdBy", "username email")
