@@ -1,9 +1,49 @@
 const express = require("express");
 const router = express.Router();
+const multer = require("multer");
+const path = require("path");
 
 const taskController = require("../controllers/taskcontroller");
 const commentController = require("../controllers/commentController");
 const { authenticateToken, requireManager } = require("../middlewares/auth");
+
+// Setup multer for file uploads
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/') // Đảm bảo folder uploads/ tồn tại
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 10 * 1024 * 1024 // 10MB max
+  },
+  fileFilter: (req, file, cb) => {
+    // Chấp nhận hầu hết các loại file
+    const allowedMimes = [
+      'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'text/plain',
+      'application/zip',
+      'application/x-rar-compressed'
+    ];
+
+    if (allowedMimes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('File type not allowed'), false);
+    }
+  }
+});
 
 //* === ROUTES QUẢN LÝ TASKS === *//
 
@@ -35,6 +75,10 @@ router.get("/tasks/board/:projectId", authenticateToken, taskController.getTasks
 router.post("/tasks/:id/subtasks", authenticateToken, taskController.addSubtask);
 router.put("/tasks/:id/subtasks/:subtaskId", authenticateToken, taskController.updateSubtask);
 router.delete("/tasks/:id/subtasks/:subtaskId", authenticateToken, taskController.deleteSubtask);
+
+// 🟢 QUẢN LÝ FILE ATTACHMENTS
+router.post("/tasks/:id/attachments", authenticateToken, upload.single('file'), taskController.uploadAttachment);
+router.delete("/tasks/:id/attachments/:attachmentId", authenticateToken, taskController.deleteAttachment);
 
 // ===========================================================
 // 💬 COMMENT ROUTES (Manager hoặc nhân viên được giao task)

@@ -3,14 +3,15 @@ const Product = require("../models/Product");
 const ProductChunk = require("../models/ProductChunk");
 const csv = require("csv-parser");
 const { Readable } = require("stream");
+const XLSX = require("xlsx");
 
 class ProductController {
   // Resolve canonical customerId from request: prefer Customer._id mapped from ownerId
   async resolveCustomerId(req) {
     try {
-      if (req?.user?.id) {
+      if (req?.user?._id) {
         const Customer = require("../models/Customer");
-        const cust = await Customer.findOne({ ownerId: req.user.id }).select(
+        const cust = await Customer.findOne({ ownerId: req.user._id }).select(
           "_id"
         );
         if (cust?._id) return cust._id.toString();
@@ -19,7 +20,7 @@ class ProductController {
 
     if (req.body?.customerId) return req.body.customerId;
     if (req.query?.customerId) return req.query.customerId;
-    return req.user?.id || undefined;
+    return req.user?._id?.toString() || undefined;
   }
   /**
    * Upload products from JSON/CSV
@@ -195,6 +196,82 @@ class ProductController {
   }
 
   /**
+   * Upload products from XLSX file
+   * POST /api/products/upload-xlsx (with multipart/form-data)
+   */
+  async uploadXLSX(req, res) {
+    try {
+      const customerId = await this.resolveCustomerId(req);
+
+      if (!req.file) {
+        return res.status(400).json({
+          success: false,
+          message: "XLSX file is required",
+        });
+      }
+
+      console.log(`[Product] Parsing XLSX file: ${req.file.originalname}`);
+
+      // Parse XLSX file
+      const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
+      const sheetName = workbook.SheetNames[0]; // Get first sheet
+      const worksheet = workbook.Sheets[sheetName];
+
+      // Convert sheet to JSON
+      const rows = XLSX.utils.sheet_to_json(worksheet);
+
+      console.log(`[Product] Found ${rows.length} rows in XLSX`);
+
+      // Map rows to products
+      const products = rows.map((row) => {
+        // Parse price: remove dots/commas and convert to number
+        let price = 0;
+        if (row["Price"]) {
+          const priceStr = String(row["Price"]).replace(/[,.\s]/g, '');
+          price = parseInt(priceStr) || 0;
+        }
+
+        return {
+          name: row["Tên sản phẩm"] || row["name"] || "",
+          description: row["Thông tin mô tả sản phẩm"] || row["description"] || "",
+          targetAudience: row["Đối tượng khách hàng"] || row["targetAudience"] || "",
+          toneOfVoice: row["Tone of voice"] || row["toneOfVoice"] || "",
+          status: row["Status"] || row["status"] || "next",
+          directUrl: row["Direct URL"] || row["directUrl"] || "",
+          price: price,
+          category: row["Category"] || row["category"] || "Trang sức",
+          images: row["Image"] ? [row["Image"]] : [],
+        };
+      }).filter(p => p.name); // Filter out rows without name
+
+      console.log(`[Product] Parsed ${products.length} valid products from XLSX`);
+
+      // Log first product for debugging
+      if (products.length > 0) {
+        console.log(`[Product] Sample product:`, products[0]);
+      }
+
+      // Ingest into Advanced RAG system
+      const result = await advancedRAGService.ingestCustomerData(
+        customerId,
+        products
+      );
+
+      res.status(200).json({
+        success: true,
+        data: result,
+        products: products, // Return parsed products for verification
+      });
+    } catch (error) {
+      console.error("[Product] XLSX upload error:", error);
+      res.status(500).json({
+        success: false,
+        message: error.message,
+      });
+    }
+  }
+
+  /**
    * Get all products for a customer
    * GET /api/products
    */
@@ -292,7 +369,14 @@ class ProductController {
    */
   async deleteAllProducts(req, res) {
     try {
-      const customerId = req.user?.id || req.body.customerId;
+      const customerId = await this.resolveCustomerId(req);
+
+      if (!customerId) {
+        return res.status(400).json({
+          success: false,
+          message: "Customer ID not found",
+        });
+      }
 
       const result = await advancedRAGService.deleteCustomerData(customerId);
 

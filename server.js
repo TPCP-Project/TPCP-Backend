@@ -55,6 +55,9 @@ app.use(cors(corsOptions));
 // 2. Middleware để parse JSON body
 app.use(express.json({ limit: "10mb" }));
 
+// 2.5. Serve static files từ uploads folder
+app.use('/uploads', express.static('uploads'));
+
 // 3. Rate Limiting để chống tấn công brute-force
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 phút

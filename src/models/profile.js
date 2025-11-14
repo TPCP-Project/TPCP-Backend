@@ -18,13 +18,20 @@ const profileSchema = new Schema(
       trim: true,
     },
 
+    nickname: {
+      type: String,
+      trim: true,
+    },
+
     phone_number: {
       type: String,
       trim: true,
       validate: {
         validator: function (v) {
+          // Cho phép null, undefined, hoặc empty string
+          if (!v || v === '' || v.length === 0) return true;
           // Kiểm tra format số điện thoại Việt Nam
-          return !v || /^(\+84|84|0)[1-9][0-9]{8,9}$/.test(v);
+          return /^(\+84|84|0)[1-9][0-9]{8,9}$/.test(v);
         },
         message: "Số điện thoại không hợp lệ",
       },
@@ -37,6 +44,19 @@ const profileSchema = new Schema(
     gender: {
       type: String,
       enum: ["male", "female", "other"],
+    },
+
+    // Cài đặt ngôn ngữ và múi giờ
+    user_language: {
+      type: String,
+      trim: true,
+      default: "vi",
+    },
+
+    user_timezone: {
+      type: String,
+      trim: true,
+      default: "Asia/Ho_Chi_Minh",
     },
 
     // Địa chỉ
