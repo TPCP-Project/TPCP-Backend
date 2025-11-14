@@ -9,15 +9,15 @@ exports.requireAdmin = (req, res, next) => {
   if (req.user.role !== "admin") {
     return res.status(403).json({
       success: false,
-      message: "Chỉ admin mới có quyền truy cập"
+      message: "Chỉ admin mới có quyền truy cập",
     });
   }
   next();
 };
 
-// =================== USER MANAGEMENT ===================
+//USER MANAGEMENT
 
-// 📊 Lấy danh sách tất cả users
+// Lấy danh sách tất cả users
 exports.getAllUsers = async (req, res) => {
   try {
     const { page = 1, limit = 20, role, accountStatus, search } = req.query;
@@ -60,7 +60,7 @@ exports.getAllUsers = async (req, res) => {
   }
 };
 
-// 👤 Lấy chi tiết user
+// Lấy chi tiết user
 exports.getUserDetails = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -95,7 +95,7 @@ exports.getUserDetails = async (req, res) => {
   }
 };
 
-// 🔧 Cập nhật role user
+// Cập nhật role user
 exports.updateUserRole = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -136,7 +136,7 @@ exports.updateUserRole = async (req, res) => {
   }
 };
 
-// 🚫 Ban/Unban user
+// Ban/Unban user
 exports.banUser = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -175,7 +175,7 @@ exports.banUser = async (req, res) => {
   }
 };
 
-// 📧 Gửi email cảnh báo cho user
+// Gửi email cảnh báo cho user
 exports.sendWarningEmail = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -193,7 +193,8 @@ exports.sendWarningEmail = async (req, res) => {
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
       return res.status(501).json({
         success: false,
-        message: "Email service chưa được cấu hình. Vui lòng cấu hình EMAIL_USER và EMAIL_PASSWORD trong .env",
+        message:
+          "Email service chưa được cấu hình. Vui lòng cấu hình EMAIL_USER và EMAIL_PASSWORD trong .env",
       });
     }
 
@@ -249,7 +250,7 @@ exports.sendWarningEmail = async (req, res) => {
   }
 };
 
-// =================== PACKAGE MANAGEMENT ===================
+//PACKAGE MANAGEMENT
 
 // 📦 Tạo gói subscription
 exports.createPackage = async (req, res) => {
@@ -372,7 +373,7 @@ exports.getAllPurchases = async (req, res) => {
     const filter = {};
     if (status) {
       // Map purchase status to subscription status
-      filter.subscriptionStatus = status === 'completed' ? 'active' : status;
+      filter.subscriptionStatus = status === "completed" ? "active" : status;
     }
     if (userId) filter.ownerId = userId;
 
@@ -386,22 +387,26 @@ exports.getAllPurchases = async (req, res) => {
     const total = await Customer.countDocuments(filter);
 
     // Transform Customer data to match Purchase format expected by frontend
-    const purchases = customers.map(customer => ({
+    const purchases = customers.map((customer) => ({
       _id: customer._id,
       userId: customer.ownerId,
       packageId: {
         name: customer.subscriptionPlan,
         price: customer.paymentInfo?.amount || 0,
-        duration: { value: 30, unit: 'days' }
+        duration: { value: 30, unit: "days" },
       },
       amount: customer.paymentInfo?.amount || 0,
-      status: customer.subscriptionStatus === 'active' ? 'completed' : customer.subscriptionStatus,
-      paymentMethod: customer.paymentInfo?.paymentMethod || 'vnpay',
-      transactionId: customer.paymentInfo?.transactionNo || customer.paymentInfo?.orderId,
+      status:
+        customer.subscriptionStatus === "active"
+          ? "completed"
+          : customer.subscriptionStatus,
+      paymentMethod: customer.paymentInfo?.paymentMethod || "vnpay",
+      transactionId:
+        customer.paymentInfo?.transactionNo || customer.paymentInfo?.orderId,
       startDate: customer.createdAt,
       endDate: customer.subscriptionExpiresAt,
       createdAt: customer.createdAt,
-      updatedAt: customer.updatedAt
+      updatedAt: customer.updatedAt,
     }));
 
     res.status(200).json({
@@ -440,14 +445,14 @@ exports.updatePurchaseStatus = async (req, res) => {
     }
 
     // Map purchase status to subscription status
-    if (status === 'completed') {
-      customer.subscriptionStatus = 'active';
-    } else if (status === 'pending') {
-      customer.subscriptionStatus = 'pending';
-    } else if (status === 'failed') {
-      customer.subscriptionStatus = 'cancelled';
-    } else if (status === 'refunded') {
-      customer.subscriptionStatus = 'cancelled';
+    if (status === "completed") {
+      customer.subscriptionStatus = "active";
+    } else if (status === "pending") {
+      customer.subscriptionStatus = "pending";
+    } else if (status === "failed") {
+      customer.subscriptionStatus = "cancelled";
+    } else if (status === "refunded") {
+      customer.subscriptionStatus = "cancelled";
     } else {
       customer.subscriptionStatus = status;
     }
@@ -465,9 +470,12 @@ exports.updatePurchaseStatus = async (req, res) => {
       data: {
         purchase: {
           _id: customer._id,
-          status: customer.subscriptionStatus === 'active' ? 'completed' : customer.subscriptionStatus,
-          notes: notes || customer.notes
-        }
+          status:
+            customer.subscriptionStatus === "active"
+              ? "completed"
+              : customer.subscriptionStatus,
+          notes: notes || customer.notes,
+        },
       },
     });
   } catch (error) {
@@ -498,7 +506,9 @@ exports.getAdminNotifications = async (req, res) => {
       .skip((page - 1) * limit);
 
     const total = await AdminNotification.countDocuments(filter);
-    const unreadCount = await AdminNotification.countDocuments({ isRead: false });
+    const unreadCount = await AdminNotification.countDocuments({
+      isRead: false,
+    });
 
     res.status(200).json({
       success: true,
@@ -568,11 +578,20 @@ exports.getDashboardStats = async (req, res) => {
 
     // Query Customer collection instead of Purchase
     const totalPurchases = await Customer.countDocuments();
-    const pendingPurchases = await Customer.countDocuments({ subscriptionStatus: "pending" });
-    const completedPurchases = await Customer.countDocuments({ subscriptionStatus: "active" });
+    const pendingPurchases = await Customer.countDocuments({
+      subscriptionStatus: "pending",
+    });
+    const completedPurchases = await Customer.countDocuments({
+      subscriptionStatus: "active",
+    });
 
     const totalRevenue = await Customer.aggregate([
-      { $match: { subscriptionStatus: "active", "paymentInfo.amount": { $exists: true } } },
+      {
+        $match: {
+          subscriptionStatus: "active",
+          "paymentInfo.amount": { $exists: true },
+        },
+      },
       { $group: { _id: null, total: { $sum: "$paymentInfo.amount" } } },
     ]);
 

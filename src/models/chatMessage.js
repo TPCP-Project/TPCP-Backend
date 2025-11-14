@@ -34,7 +34,7 @@ const chatMessageSchema = new Schema(
       index: true,
     },
 
-    // File đính kèm (nếu có)
+    // File đính kèm
     attachments: [
       {
         filename: { type: String, required: true },

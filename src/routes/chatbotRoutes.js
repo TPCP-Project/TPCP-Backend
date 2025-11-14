@@ -10,7 +10,7 @@ router.get("/health", chatbotController.health);
 // Ask chatbot with ADVANCED RAG - Yêu cầu Pro subscription
 router.post(
   "/ask-advanced",
-  
+
   chatbotController.askAdvanced
 );
 

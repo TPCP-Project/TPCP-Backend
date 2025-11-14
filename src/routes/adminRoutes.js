@@ -3,11 +3,11 @@ const router = express.Router();
 const adminController = require("../controllers/adminController");
 const { authenticateToken } = require("../middlewares/auth");
 
-// =================== PUBLIC ROUTES (không cần admin) ===================
+// ============== PUBLIC ROUTES (không cần admin) ===================
 // Lấy danh sách packages (public - cho trang pricing)
 router.get("/packages/public", adminController.getAllPackages);
 
-// ✅ Tất cả routes còn lại yêu cầu đăng nhập và role admin
+// Tất cả routes còn lại yêu cầu đăng nhập và role admin
 router.use(authenticateToken);
 router.use(adminController.requireAdmin);
 
@@ -26,11 +26,17 @@ router.delete("/packages/:packageId", adminController.deletePackage);
 
 // =================== PURCHASE MANAGEMENT ===================
 router.get("/purchases", adminController.getAllPurchases);
-router.put("/purchases/:purchaseId/status", adminController.updatePurchaseStatus);
+router.put(
+  "/purchases/:purchaseId/status",
+  adminController.updatePurchaseStatus
+);
 
 // =================== NOTIFICATIONS ===================
 router.get("/notifications", adminController.getAdminNotifications);
-router.put("/notifications/:notificationId/read", adminController.markNotificationAsRead);
+router.put(
+  "/notifications/:notificationId/read",
+  adminController.markNotificationAsRead
+);
 
 // =================== DASHBOARD ===================
 router.get("/dashboard/stats", adminController.getDashboardStats);

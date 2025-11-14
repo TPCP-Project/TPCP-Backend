@@ -28,14 +28,14 @@ async function authenticateToken(req, res, next) {
     if (!user.isVerified) {
       return res.status(403).json({
         success: false,
-        message: "Tài khoản chưa được xác thực",
+        message: "Tài khoản hiện chưa được xác thực",
       });
     }
 
     if (user.isBanned) {
       return res.status(403).json({
         success: false,
-        message: "Tài khoản đã bị khóa",
+        message: "Tài khoản hiện đã bị khóa",
       });
     }
 
@@ -45,12 +45,12 @@ async function authenticateToken(req, res, next) {
     console.error("Auth middleware error:", error);
     return res.status(401).json({
       success: false,
-      message: "Token không hợp lệ hoặc đã hết hạn",
+      message: "Token hiện không hợp lệ hoặc đã hết hạn",
     });
   }
 }
 
-// Kiểm tra xác thực email
+/* Kiểm tra xác thực email */
 const requireVerified = (req, res, next) => {
   if (!req.user.isVerified) {
     return res.status(403).json({
@@ -62,7 +62,7 @@ const requireVerified = (req, res, next) => {
   next();
 };
 
-// ✅ Kiểm tra quyền theo role
+/* Kiểm tra quyền theo role */
 const authorizeRoles = (...allowedRoles) => {
   return (req, res, next) => {
     const { role } = req.user;
@@ -76,7 +76,7 @@ const authorizeRoles = (...allowedRoles) => {
   };
 };
 
-// ✅ Chỉ cho phép Admin
+/*Chỉ cho phép Admin  */
 const requireAdmin = (req, res, next) => {
   if (!req.user || req.user.role !== "admin") {
     return res.status(403).json({
@@ -87,7 +87,7 @@ const requireAdmin = (req, res, next) => {
   next();
 };
 
-// ✅ Chỉ cho phép Manager
+/* Chỉ cho phép Manager */
 const requireManager = (req, res, next) => {
   if (!req.user || req.user.role !== "manager") {
     return res.status(403).json({

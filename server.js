@@ -16,15 +16,14 @@ const customerRoutes = require("./src/routes/customerRoutes");
 const chatRoutes = require("./src/routes/chatRoutes");
 
 const taskRoutes = require("./src/routes/taskRoutes");
-const kpiRoutes = require('./src/routes/kpiRoutes');
-const adminRoutes = require('./src/routes/adminRoutes');
+const kpiRoutes = require("./src/routes/kpiRoutes");
+const adminRoutes = require("./src/routes/adminRoutes");
 
 const facebookRoutes = require("./src/routes/facebookRoutes");
 const subscriptionRoutes = require("./src/routes/subscriptionRoutes");
 
 const { setupCronJobs } = require("./src/config/cronJobs");
 const SocketManager = require("./src/config/socket");
-
 
 const app = express();
 
@@ -66,7 +65,7 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// === KHAI BÁO ROUTES ===
+// KHAI BÁO ROUTES ===
 app.use("/auth", authRoutes);
 app.use("/api", projectRoutes); // Routes quản lý project
 app.use("/api", projectInvitationRoutes); // Routes invitation
@@ -75,15 +74,15 @@ app.use("/api", chatRoutes); // Routes chat
 
 app.use("/api", taskRoutes); // Routes quản lý task
 
-app.use('/api/kpi', kpiRoutes); // Routes quản lý KPI
-app.use('/api/admin', adminRoutes); // Routes quản lý admin
+app.use("/api/kpi", kpiRoutes); // Routes quản lý KPI
+app.use("/api/admin", adminRoutes); // Routes quản lý admin
+
 
 app.use("/api/products", productRoutes); // Routes products
 app.use("/api/chatbot", chatbotRoutes); // Routes chatbot
 app.use("/api", customerRoutes); // Routes customers
 app.use("/api", facebookRoutes); // Facebook manual connect + webhook
 app.use("/api/subscription", subscriptionRoutes); // Subscription & payment routes
-
 
 app.get("/health", (_req, res) =>
   res.json({ ok: true, message: "Server is healthy" })

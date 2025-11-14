@@ -3,7 +3,7 @@ const { Schema } = mongoose;
 
 const chatParticipantSchema = new Schema(
   {
-    // Conversation
+    //   Conversation
     conversation_id: {
       type: Schema.Types.ObjectId,
       ref: "Conversation",
