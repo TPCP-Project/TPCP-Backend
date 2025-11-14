@@ -1,22 +1,18 @@
 const mongoose = require("mongoose");
 
 // Subtask schema
-const subtaskSchema = new mongoose.Schema(
-  {
-    title: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    completed: {
-      type: Boolean,
-      default: false,
-    },
+const subtaskSchema = new mongoose.Schema({
+  title: {
+    type: String,
+    required: true,
+    trim: true,
   },
-  { _id: true }
-);
+  completed: {
+    type: Boolean,
+    default: false,
+  },
+}, { _id: true });
 
-// Task schema
 const taskSchema = new mongoose.Schema(
   {
     projectId: {
@@ -49,20 +45,22 @@ const taskSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
-    labels: [
-      {
-        type: String,
-        trim: true,
-      },
-    ],
+    labels: [{
+      type: String,
+      trim: true,
+    }],
     subtasks: [subtaskSchema],
     assignedTo: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       index: true,
     },
-    dueDate: Date,
-    completedAt: Date,
+    dueDate: {
+      type: Date,
+    },
+    completedAt: {
+      type: Date,
+    },
     isOverdue: {
       type: Boolean,
       default: false,
@@ -77,27 +75,25 @@ const taskSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// ✅ Define indexes (for KPI and reporting queries)
+// Indexes for KPI queries
 taskSchema.index({ assignedTo: 1, status: 1, completedAt: 1 });
 taskSchema.index({ projectId: 1, sprint: 1 });
 taskSchema.index({ projectId: 1, status: 1 });
 
-// ✅ Middleware: Auto-update isOverdue + completedAt
-taskSchema.pre("save", function (next) {
-  // Auto-check overdue
-  if (this.dueDate && this.status !== "APPROVED" && this.status !== "Done") {
+// Auto-update isOverdue field
+taskSchema.pre('save', function(next) {
+  if (this.dueDate && this.status !== 'APPROVED' && this.status !== 'Done') {
     this.isOverdue = new Date() > this.dueDate;
   } else {
     this.isOverdue = false;
   }
 
-  // Auto-set completedAt
-  if (this.status === "APPROVED" && !this.completedAt) {
+  // Set completedAt when task is marked as APPROVED
+  if (this.status === 'APPROVED' && !this.completedAt) {
     this.completedAt = new Date();
   }
 
   next();
 });
 
-// ✅ Export model ONCE (after schema setup)
 module.exports = mongoose.model("Task", taskSchema);
