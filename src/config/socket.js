@@ -11,7 +11,7 @@ class SocketManager {
   }
 
   setupMiddleware() {
-    // Middleware xác thực JWT
+    //Middleware xác thực JWT
     this.io.use(async (socket, next) => {
       try {
         const token =
@@ -117,7 +117,7 @@ class SocketManager {
     try {
       const { conversationId } = data;
 
-      // Kiểm tra user có tham gia conversation không
+      // Check user có tham gia conversation không
       const participant = await ChatParticipant.findOne({
         conversation_id: conversationId,
         user_id: socket.userId,

@@ -3,7 +3,7 @@ const router = new express.Router();
 const ChatController = require("../controllers/chatController");
 const { authenticateToken, requireVerified } = require("../middlewares/auth");
 
-// === ROUTES QUẢN LÝ CONVERSATION ===
+// ROUTES QUẢN LÝ CONVERSATION
 
 // Tạo conversation cho project
 router.post(
@@ -60,7 +60,7 @@ router.delete(
   }
 );
 
-// === ROUTES QUẢN LÝ MESSAGES ===
+//ROUTES QUẢN LÝ MESSAGES
 
 // Lấy danh sách messages trong conversation
 router.get(
@@ -112,7 +112,7 @@ router.put(
   }
 );
 
-// === ROUTES QUẢN LÝ REACTIONS ===
+//ROUTES QUẢN LÝ REACTIONS
 
 // Thêm reaction cho message
 router.post(

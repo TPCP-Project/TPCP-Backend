@@ -7,9 +7,7 @@ const User = require("../models/user");
 const mongoose = require("mongoose");
 
 class ChatService {
-  /**
-   * Tạo conversation cho project
-   */
+  //Tạo conversation cho project
   async createProjectConversation(projectId, userId, name, description) {
     try {
       // Kiểm tra project tồn tại
@@ -79,9 +77,8 @@ class ChatService {
     }
   }
 
-  /**
-   * Tạo conversation 1vs1
-   */
+  // Tạo conversation 1vs1
+
   async createDirectConversation(userId, targetUserId) {
     try {
       // Kiểm tra target user tồn tại
@@ -159,9 +156,8 @@ class ChatService {
     }
   }
 
-  /**
-   * Lấy danh sách conversation của user
-   */
+  // Lấy danh sách conversation của user
+
   async getUserConversations(userId, type = null, page = 1, limit = 20) {
     try {
       const query = { status: "active" };
@@ -225,9 +221,8 @@ class ChatService {
     }
   }
 
-  /**
-   * Lấy thông tin chi tiết conversation
-   */
+  // Lấy thông tin chi tiết conversation
+
   async getConversationById(conversationId, userId) {
     try {
       // Kiểm tra user có tham gia conversation không
@@ -260,9 +255,8 @@ class ChatService {
     }
   }
 
-  /**
-   * Lấy danh sách messages trong conversation
-   */
+  // Lấy danh sách messages trong conversation
+
   async getConversationMessages(
     conversationId,
     userId,
@@ -378,10 +372,14 @@ class ChatService {
       // Emit Socket.IO event for real-time updates
       const SocketManager = require("../config/socket");
       if (global.socketManager) {
-        global.socketManager.sendMessageToConversation(conversationId, "new_message", {
+        global.socketManager.sendMessageToConversation(
           conversationId,
-          message: populatedMessage,
-        });
+          "new_message",
+          {
+            conversationId,
+            message: populatedMessage,
+          }
+        );
       }
 
       return populatedMessage;
@@ -390,9 +388,8 @@ class ChatService {
     }
   }
 
-  /**
-   * Cập nhật message
-   */
+  //Cập nhật message
+
   async updateMessage(messageId, userId, content) {
     try {
       const message = await ChatMessage.findById(messageId);
@@ -417,9 +414,8 @@ class ChatService {
     }
   }
 
-  /**
-   * Xóa message
-   */
+  // Xóa message
+
   async deleteMessage(messageId, userId) {
     try {
       const message = await ChatMessage.findById(messageId);
@@ -443,9 +439,8 @@ class ChatService {
     }
   }
 
-  /**
-   * Đánh dấu đã đọc messages
-   */
+  //Đánh dấu đã đọc messages
+
   async markAsRead(conversationId, userId) {
     try {
       const participant = await ChatParticipant.findOne({
@@ -474,9 +469,8 @@ class ChatService {
     }
   }
 
-  /**
-   * Thêm reaction cho message
-   */
+  //Thêm reaction cho message
+
   async addReaction(messageId, userId, emoji) {
     try {
       const message = await ChatMessage.findById(messageId);
@@ -506,9 +500,8 @@ class ChatService {
     }
   }
 
-  /**
-   * Xóa reaction
-   */
+  // Xóa reaction
+
   async removeReaction(messageId, userId, emoji) {
     try {
       const message = await ChatMessage.findById(messageId);
@@ -529,9 +522,8 @@ class ChatService {
     }
   }
 
-  /**
-   * Lấy danh sách participants trong conversation
-   */
+  //Lấy danh sách participants trong conversation
+
   async getConversationParticipants(conversationId, userId) {
     try {
       // Kiểm tra user có tham gia conversation không
@@ -564,9 +556,8 @@ class ChatService {
     }
   }
 
-  /**
-   * Rời khỏi conversation
-   */
+  //Rời khỏi conversation
+
   async leaveConversation(conversationId, userId) {
     try {
       const participant = await ChatParticipant.findOne({

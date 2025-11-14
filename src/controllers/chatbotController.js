@@ -1,12 +1,4 @@
-// Advanced-only controller: legacy chatbotService removed
-
 class ChatbotController {
-  // Basic ask endpoint removed; using only advanced endpoints
-
-  /**
-   * Ask chatbot with ADVANCED RAG
-   * POST /api/chatbot/ask-advanced
-   */
   async askAdvanced(req, res) {
     try {
       const customerId = req.user?.id || req.body.customerId;
@@ -48,10 +40,8 @@ class ChatbotController {
     }
   }
 
-  /**
-   * Test RAG retrieval without generating response (Advanced hybrid)
-   * POST /api/chatbot/test-retrieval
-   */
+  // POST /api/chatbot/test-retrieval
+
   async testRetrieval(req, res) {
     try {
       const customerId = req.user?.id || req.body.customerId;
@@ -96,10 +86,8 @@ class ChatbotController {
     }
   }
 
-  /**
-   * Health check
-   * GET /api/chatbot/health
-   */
+  // GET /api/chatbot/health
+
   async health(req, res) {
     try {
       res.status(200).json({
