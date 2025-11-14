@@ -6,13 +6,14 @@ const {
 } = require("../validation/auth");
 
 class AuthController {
-  /**
-   * POST /auth/register
-   * Đăng ký + gửi email 6 số
-   */
+  
+  // * POST /auth/register
+  //* Đăng ký + gửi email 6 số
+   
   async register(req, res) {
     try {
-      // Validate
+      /*Validate
+      */
       const { error } = registerValidation(req.body);
       if (error) {
         return res.status(400).json({
@@ -41,13 +42,12 @@ class AuthController {
     }
   }
 
-  /**
-   * POST /auth/login
-   * Chỉ cho phép login nếu đã xác thực
-   */
+  // POST /auth/login
+  //Chỉ cho phép login nếu đã xác thực
+  
   async login(req, res) {
     try {
-      // Validate
+      /* Validate */
       const { error } = loginValidation(req.body);
       if (error) {
         return res.status(400).json({
@@ -67,7 +67,7 @@ class AuthController {
     } catch (error) {
       console.error("Login error:", error);
 
-      // Trả về status code phù hợp
+      /* Trả về status code phù hợp */
       let statusCode = 400;
       if (error.message.includes("chưa được xác thực")) {
         statusCode = 403; // Forbidden
@@ -82,10 +82,8 @@ class AuthController {
     }
   }
 
-  /**
-   * POST /auth/verify-signup
-   * Xác thực mã 6 số: { email, code }
-   */
+  //POST /auth/verify-signup
+  //Xác thực mã 6 số: { email, code }
   async verifySignup(req, res) {
     try {
       const { email, code } = req.body;
@@ -113,10 +111,8 @@ class AuthController {
     }
   }
 
-  /**
-   * POST /auth/resend-verification
-   * Gửi lại mã 6 số
-   */
+   //POST /auth/resend-verification
+   //Gửi lại mã 6 số
   async resendVerificationEmail(req, res) {
     try {
       const { email } = req.body;
@@ -143,10 +139,9 @@ class AuthController {
     }
   }
 
-  /**
-   * POST /auth/change-password
-   * Đổi mật khẩu (cần authenticate)
-   */
+  
+   //POST /auth/change-password
+   //Đổi mật khẩu (cần authenticate)
   async changePassword(req, res) {
     try {
       const { error } = changePasswordValidation(req.body);
@@ -177,9 +172,7 @@ class AuthController {
     }
   }
 
-  /**
-   * POST /auth/logout
-   */
+  //POST /auth/logout
   async logout(req, res) {
     res.json({
       success: true,

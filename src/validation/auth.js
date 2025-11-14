@@ -4,12 +4,12 @@ const registerValidation = (data) => {
   const schema = Joi.object({
     name: Joi.string().min(2).max(50).required().messages({
       "string.min": "Tên phải có ít nhất 2 ký tự",
-      "string.max": "Tên không được vượt quá 50 ký tự",
+      "string.max": "Tên không được phép vượt quá 50 ký tự",
       "any.required": "Tên là bắt buộc!!",
     }),
     username: Joi.string().min(3).max(30).alphanum().required().messages({
       "string.min": "Username phải có ít nhất 3 ký tự",
-      "string.max": "Username không được vượt quá 30 ký tự",
+      "string.max": "Username không được phép vượt quá 30 ký tự",
       "string.alphanum": "Username chỉ được chứa chữ cái và số",
       "any.required": "Username là bắt buộc!!",
     }),
@@ -22,7 +22,7 @@ const registerValidation = (data) => {
       "any.required": "Mật khẩu là bắt buộc",
     }),
     bio: Joi.string().max(1000).optional().messages({
-      "string.max": "Bio không được vượt quá 1000 ký tự",
+      "string.max": "Bio không được phép vượt quá 1000 ký tự",
     }),
   });
 

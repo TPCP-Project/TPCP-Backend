@@ -5,7 +5,7 @@ const { CLIENT_URL, EMAIL_USER, EMAIL_PASSWORD, SMTP_HOST, SMTP_PORT } =
 const transporter = nodemailer.createTransport({
   host: SMTP_HOST,
   port: Number(SMTP_PORT),
-  secure: Number(SMTP_PORT) === 465, // false với port 587
+  secure: Number(SMTP_PORT) === 465, // false với port là 587
   auth: {
     user: EMAIL_USER,
     pass: EMAIL_PASSWORD,
@@ -13,12 +13,12 @@ const transporter = nodemailer.createTransport({
 });
 
 /**
- * Gửi email mời tham gia project
- * @param {string} toEmail - Email người nhận
- * @param {string} username - Tên người nhận
- * @param {string} inviterName - Tên người gửi lời mời
- * @param {string} projectName - Tên project
- * @param {string} inviteCode - Mã mời
+ * Gửi email mời tham gia vào project
+ * @param {string} toEmail - Email của người nhận
+ * @param {string} username - Tên của người nhận
+ * @param {string} inviterName - Tên của người gửi lời mời
+ * @param {string} projectName - Tên của project
+ * @param {string} inviteCode - Mã lời mời
  */
 const sendProjectInvitation = async (
   toEmail,
@@ -45,7 +45,7 @@ const sendProjectInvitation = async (
         
         <p>Để tham gia project, bạn có thể:</p>
         <ol>
-          <li>Click vào nút bên dưới để tham gia trực tiếp</li>
+          <li>Click vào nút ở bên dưới để tham gia trực tiếp</li>
           <li>Hoặc sử dụng mã tham gia trên trang chủ của ứng dụng LPCP</li>
         </ol>
         
@@ -65,10 +65,10 @@ const sendProjectInvitation = async (
 
 /**
  * Gửi email thông báo khi request tham gia project được phê duyệt
- * @param {string} toEmail - Email người nhận
- * @param {string} username - Tên người nhận
- * @param {string} projectName - Tên project
- * @param {string} approverName - Tên người phê duyệt
+ * @param {string} toEmail - Email của người nhận
+ * @param {string} username - Tên của người nhận
+ * @param {string} projectName - Tên của project
+ * @param {string} approverName - Tên của người phê duyệt
  */
 const sendJoinRequestApproved = async (
   toEmail,
@@ -105,10 +105,10 @@ const sendJoinRequestApproved = async (
 
 /**
  * Gửi email thông báo khi request tham gia project bị từ chối
- * @param {string} toEmail - Email người nhận
- * @param {string} username - Tên người nhận
- * @param {string} projectName - Tên project
- * @param {string} reason - Lý do từ chối (nếu có)
+ * @param {string} toEmail - Email của người nhận
+ * @param {string} username - Tên của người nhận
+ * @param {string} projectName - Tên của project
+ * @param {string} reason - Lý do bị từ chối (nếu có)
  */
 const sendJoinRequestRejected = async (
   toEmail,
@@ -128,7 +128,7 @@ const sendJoinRequestRejected = async (
         
         ${reason ? `<p><strong>Lý do:</strong> ${reason}</p>` : ""}
         
-        <p>Nếu bạn cho rằng đây là sai sót, vui lòng liên hệ với người quản lý project hoặc gửi yêu cầu tham gia lại sau.</p>
+        <p>Nếu bạn cho rằng đây là sai sót, vui lòng liên hệ với người quản lý project hoặc gửi yêu cầu tham gia lại sau,xin cảm ơn.</p>
       </div>
     `,
   };
@@ -138,10 +138,10 @@ const sendJoinRequestRejected = async (
 
 /**
  * Gửi email thông báo cho chủ project khi có người xin tham gia
- * @param {string} toEmail - Email chủ project
- * @param {string} ownerName - Tên chủ project
- * @param {string} requesterName - Tên người yêu cầu
- * @param {string} projectName - Tên project
+ * @param {string} toEmail - Email của chủ project
+ * @param {string} ownerName - Tên của chủ project
+ * @param {string} requesterName - Tên của người yêu cầu
+ * @param {string} projectName - Tên của project
  */
 const sendJoinRequestNotification = async (
   toEmail,
