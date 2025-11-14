@@ -545,3 +545,132 @@ exports.deleteSubtask = async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
+
+// 🟢 Upload attachment vào task
+exports.uploadAttachment = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: "No file uploaded" });
+    }
+
+    const task = await Task.findById(id);
+    if (!task) {
+      return res.status(404).json({ success: false, message: "Task not found" });
+    }
+
+    // Kiểm tra quyền
+    const membership = await ProjectMember.findOne({
+      project_id: task.projectId,
+      user_id: req.user._id,
+      status: "active"
+    });
+
+    if (!membership) {
+      return res.status(403).json({
+        success: false,
+        message: "Bạn không phải thành viên của dự án này"
+      });
+    }
+
+    // Tạo attachment object
+    const attachment = {
+      filename: req.file.filename,
+      originalName: req.file.originalname,
+      url: `/uploads/${req.file.filename}`,
+      size: req.file.size,
+      mimetype: req.file.mimetype,
+      uploadedBy: req.user._id,
+      uploadedAt: new Date()
+    };
+
+    task.attachments.push(attachment);
+    await task.save();
+
+    const updatedTask = await Task.findById(id)
+      .populate("assignedTo", "username email")
+      .populate("createdBy", "username email")
+      .populate("projectId", "name")
+      .populate("attachments.uploadedBy", "username email");
+
+    res.status(200).json({
+      success: true,
+      message: "File uploaded successfully",
+      task: updatedTask,
+    });
+  } catch (error) {
+    console.error("Upload Attachment Error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+// 🟢 Xóa attachment khỏi task
+exports.deleteAttachment = async (req, res) => {
+  try {
+    const { id, attachmentId } = req.params;
+
+    const task = await Task.findById(id);
+    if (!task) {
+      return res.status(404).json({ success: false, message: "Task not found" });
+    }
+
+    // Kiểm tra quyền
+    const membership = await ProjectMember.findOne({
+      project_id: task.projectId,
+      user_id: req.user._id,
+      status: "active"
+    });
+
+    if (!membership) {
+      return res.status(403).json({
+        success: false,
+        message: "Bạn không phải thành viên của dự án này"
+      });
+    }
+
+    // Tìm attachment
+    const attachment = task.attachments.id(attachmentId);
+    if (!attachment) {
+      return res.status(404).json({ success: false, message: "Attachment not found" });
+    }
+
+    // Chỉ owner/admin hoặc người upload mới được xóa
+    const isOwnerOrAdmin = membership.role === "owner" || membership.role === "admin";
+    const isUploader = attachment.uploadedBy.toString() === req.user._id.toString();
+
+    if (!isOwnerOrAdmin && !isUploader) {
+      return res.status(403).json({
+        success: false,
+        message: "Bạn không có quyền xóa file này"
+      });
+    }
+
+    // Xóa file vật lý (nếu cần)
+    const fs = require('fs');
+    const path = require('path');
+    const filePath = path.join(__dirname, '../../uploads', attachment.filename);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+
+    // Xóa attachment khỏi task
+    task.attachments.pull(attachmentId);
+    await task.save();
+
+    const updatedTask = await Task.findById(id)
+      .populate("assignedTo", "username email")
+      .populate("createdBy", "username email")
+      .populate("projectId", "name")
+      .populate("attachments.uploadedBy", "username email");
+
+    res.status(200).json({
+      success: true,
+      message: "Attachment deleted successfully",
+      task: updatedTask,
+    });
+  } catch (error) {
+    console.error("Delete Attachment Error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};

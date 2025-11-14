@@ -9,8 +9,7 @@ class ProfileService {
   async getProfileByUserId(userId) {
     try {
       let profile = await Profile.findOne({ user_id: userId })
-        .populate("user_id", "name username email avatar accountStatus")
-        .lean();
+        .populate("user_id", "name username email avatar accountStatus");
 
       // Nếu chưa có profile, tạo mới
       if (!profile) {
@@ -25,11 +24,11 @@ class ProfileService {
         });
 
         profile = await Profile.findById(profile._id)
-          .populate("user_id", "name username email avatar accountStatus")
-          .lean();
+          .populate("user_id", "name username email avatar accountStatus");
       }
 
-      return profile;
+      // Convert to plain object
+      return profile.toObject({ virtuals: true });
     } catch (error) {
       throw new Error(`Không thể lấy profile: ${error.message}`);
     }
@@ -44,8 +43,7 @@ class ProfileService {
         user_id: userId,
         is_public: true,
       })
-        .populate("user_id", "name username email avatar accountStatus")
-        .lean();
+        .populate("user_id", "name username email avatar accountStatus");
 
       if (!profile) {
         throw new Error("Profile không tồn tại hoặc không public");
@@ -56,8 +54,11 @@ class ProfileService {
         $inc: { profile_views: 1 },
       });
 
+      // Convert to plain object
+      const profileObj = profile.toObject({ virtuals: true });
+
       // Lọc thông tin theo cài đặt riêng tư
-      const filteredProfile = this.filterProfileByPrivacy(profile);
+      const filteredProfile = this.filterProfileByPrivacy(profileObj);
 
       return filteredProfile;
     } catch (error) {
@@ -76,34 +77,77 @@ class ProfileService {
         throw new Error("Không tìm thấy user");
       }
 
-      // Tìm hoặc tạo profile
+      // Tìm profile hiện tại
       let profile = await Profile.findOne({ user_id: userId });
 
+      // Nếu chưa có profile, tạo mới
       if (!profile) {
-        profile = new Profile({
+        profile = await Profile.create({
           user_id: userId,
           full_name: user.name || user.username,
+          ...updateData
         });
+      } else {
+        // Chuẩn bị update object với $set và $unset
+        const updateObject = { $set: {} };
+        const unsetFields = {};
+
+        Object.keys(updateData).forEach((key) => {
+          if (updateData[key] !== undefined) {
+            // Xử lý nested objects (address, occupation, education, etc.)
+            if (typeof updateData[key] === 'object' && !Array.isArray(updateData[key]) && updateData[key] !== null) {
+              // Merge với object hiện tại
+              const currentValue = profile[key]?.toObject?.() || profile[key] || {};
+              const mergedValue = { ...currentValue, ...updateData[key] };
+              Object.keys(mergedValue).forEach((nestedKey) => {
+                if (mergedValue[nestedKey] === '' || mergedValue[nestedKey] === null) {
+                  unsetFields[`${key}.${nestedKey}`] = '';
+                } else {
+                  updateObject.$set[`${key}.${nestedKey}`] = mergedValue[nestedKey];
+                }
+              });
+            } else {
+              // Nếu giá trị là empty string, unset field thay vì set
+              if (updateData[key] === '' || updateData[key] === null) {
+                unsetFields[key] = '';
+              } else {
+                updateObject.$set[key] = updateData[key];
+              }
+            }
+          }
+        });
+
+        // Cập nhật last_updated
+        updateObject.$set.last_updated = new Date();
+
+        // Thêm $unset nếu có fields cần xóa
+        if (Object.keys(unsetFields).length > 0) {
+          updateObject.$unset = unsetFields;
+        }
+
+        // Sử dụng findOneAndUpdate để tránh conflict với text index
+        profile = await Profile.findOneAndUpdate(
+          { user_id: userId },
+          updateObject,
+          { new: true, runValidators: true }
+        );
       }
 
-      // Cập nhật dữ liệu
-      Object.keys(updateData).forEach((key) => {
-        if (updateData[key] !== undefined) {
-          profile[key] = updateData[key];
-        }
-      });
-
       // Kiểm tra completion
-      profile.is_completed = this.checkProfileCompletion(profile);
-
-      await profile.save();
+      const isCompleted = this.checkProfileCompletion(profile);
+      if (profile.is_completed !== isCompleted) {
+        profile = await Profile.findByIdAndUpdate(
+          profile._id,
+          { is_completed: isCompleted },
+          { new: true }
+        );
+      }
 
       // Populate và trả về
       const updatedProfile = await Profile.findById(profile._id)
-        .populate("user_id", "name username email avatar accountStatus")
-        .lean();
+        .populate("user_id", "name username email avatar accountStatus");
 
-      return updatedProfile;
+      return updatedProfile.toObject({ virtuals: true });
     } catch (error) {
       throw new Error(`Không thể cập nhật profile: ${error.message}`);
     }
@@ -214,12 +258,11 @@ class ProfileService {
           createdAt: -1,
         })
         .skip((page - 1) * limit)
-        .limit(limit)
-        .lean();
+        .limit(limit);
 
-      // Lọc thông tin theo privacy settings
+      // Convert to plain objects và lọc theo privacy settings
       const filteredProfiles = profiles.map((profile) =>
-        this.filterProfileByPrivacy(profile)
+        this.filterProfileByPrivacy(profile.toObject({ virtuals: true }))
       );
 
       // Đếm tổng số

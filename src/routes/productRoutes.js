@@ -11,8 +11,13 @@ const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
   fileFilter: (req, file, cb) => {
-    const allowedTypes = ["text/csv", "application/pdf"];
-    const allowedExtensions = [".csv", ".pdf"];
+    const allowedTypes = [
+      "text/csv",
+      "application/pdf",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "application/vnd.ms-excel"
+    ];
+    const allowedExtensions = [".csv", ".pdf", ".xlsx", ".xls"];
 
     const isValidType = allowedTypes.includes(file.mimetype);
     const isValidExt = allowedExtensions.some((ext) =>
@@ -22,7 +27,7 @@ const upload = multer({
     if (isValidType || isValidExt) {
       cb(null, true);
     } else {
-      cb(new Error("Only CSV and PDF files are allowed"));
+      cb(new Error("Only CSV, PDF, and XLSX files are allowed"));
     }
   },
 });
@@ -51,6 +56,15 @@ router.post(
   requireProSubscription,
   upload.single("file"),
   c.uploadCSV.bind(c)
+);
+
+// Upload products (XLSX file) - Yêu cầu Pro subscription
+router.post(
+  "/upload-xlsx",
+  authenticateToken,
+  requireProSubscription,
+  upload.single("file"),
+  c.uploadXLSX.bind(c)
 );
 
 // Get all products - Yêu cầu Pro subscription

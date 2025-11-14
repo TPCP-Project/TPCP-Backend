@@ -50,6 +50,21 @@ const taskSchema = new mongoose.Schema(
       trim: true,
     }],
     subtasks: [subtaskSchema],
+    attachments: [{
+      filename: String,
+      originalName: String,
+      url: String,
+      size: Number,
+      mimetype: String,
+      uploadedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+      uploadedAt: {
+        type: Date,
+        default: Date.now,
+      }
+    }],
     assignedTo: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
