@@ -73,8 +73,10 @@ app.use("/api", profileRoutes); // Routes quản lý profile
 app.use("/api", chatRoutes); // Routes chat
 
 app.use("/api", taskRoutes); // Routes quản lý task
+
 app.use("/api/kpi", kpiRoutes); // Routes quản lý KPI
 app.use("/api/admin", adminRoutes); // Routes quản lý admin
+
 
 app.use("/api/products", productRoutes); // Routes products
 app.use("/api/chatbot", chatbotRoutes); // Routes chatbot
