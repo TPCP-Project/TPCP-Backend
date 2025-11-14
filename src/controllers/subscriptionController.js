@@ -6,9 +6,8 @@ const User = require("../models/user");
 const orderMapping = new Map();
 
 class SubscriptionController {
-  /**
-   * Tạo URL thanh toán cho gói Pro
-   */
+  // Tạo URL thanh toán cho gói Pro
+
   async createPayment(req, res) {
     try {
       const userId = req.user.id;
@@ -30,7 +29,7 @@ class SubscriptionController {
       // Tạo mã giao dịch
       const orderId = paymentService.generateOrderId();
 
-      // 🔥 LƯU MAPPING orderId → userId
+      //  LƯU MAPPING orderId → userId
       orderMapping.set(orderId, userId);
 
       // Tạo URL thanh toán - LUÔN dùng backend return URL
@@ -46,7 +45,7 @@ class SubscriptionController {
               ? "127.0.0.1"
               : req.ip || req.connection.remoteAddress,
         },
-        // QUAN TRỌNG: returnUrl phải là backend URL, không phải frontend
+        // QUAN TRỌNG: returnUrl phải là backend URL không phải frontend
         returnUrl:
           process.env.VNPAY_RETURN_URL ||
           "http://localhost:4000/api/subscription/payment-return",
@@ -70,9 +69,8 @@ class SubscriptionController {
     }
   }
 
-  /**
-   * Xử lý kết quả thanh toán từ VNPay
-   */
+  //Xử lý kết quả thanh toán từ VNPay
+
   async handlePaymentReturn(req, res) {
     try {
       console.log("[Subscription] Payment return:", req.query);

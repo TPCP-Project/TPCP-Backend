@@ -1,9 +1,8 @@
 const Customer = require("../models/Customer");
 
-/**
- * Middleware kiểm tra subscription Pro
- * Chỉ cho phép user có subscription active sử dụng các tính năng premium
- */
+//Middleware kiểm tra subscription Pro
+// Chỉ cho phép user có subscription active sử dụng các tính năng premium
+
 const requireProSubscription = async (req, res, next) => {
   try {
     const userId = req.user.id;
