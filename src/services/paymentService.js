@@ -3,7 +3,7 @@ const axios = require("axios");
 
 class PaymentService {
   constructor() {
-    // VNPay URLs
+    /* VNPay URLs */
     this.vnpayUrl =
       process.env.VNPAY_URL ||
       "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
@@ -11,7 +11,7 @@ class PaymentService {
       process.env.VNPAY_RETURN_URL ||
       "http://localhost:4000/api/subscription/payment-return";
 
-    // VNPay credentials
+    /* VNPay credentials */
     this.vnpayTmnCode = process.env.VNPAY_TMN_CODE;
     this.vnpaySecretKey =
       process.env.VNPAY_SECRET_KEY || process.env.VNPAY_HASH_SECRET;
@@ -20,10 +20,10 @@ class PaymentService {
       process.env.VNPAY_API_URL ||
       "https://sandbox.vnpayment.vn/merchant_webapi/api/transaction";
 
-    // Validate required credentials
+    /* Validate required credentials */
     this.validateConfig();
 
-    console.log("✅ PaymentService initialized successfully");
+    console.log(" PaymentService initialized successfully");
   }
 
   validateConfig() {
@@ -37,7 +37,7 @@ class PaymentService {
       .map(([key]) => key);
 
     if (missing.length > 0) {
-      const error = `❌ Missing required VNPay credentials: ${missing.join(
+      const error = ` Missing required VNPay credentials: ${missing.join(
         ", "
       )}`;
       console.error(error);
@@ -46,16 +46,14 @@ class PaymentService {
       throw new Error(error);
     }
 
-    // Log thông tin config (ẩn một phần secret key)
+    /* Log thông tin config (ẩn một phần secret key) */
     console.log("[Payment] VNPay Config:");
     console.log("  TMN Code:", this.vnpayTmnCode);
     console.log("  Secret Key:", this.vnpaySecretKey?.substring(0, 10) + "...");
     console.log("  Return URL:", this.vnpayReturnUrl);
   }
 
-  /**
-   * Tạo URL thanh toán VNPay
-   */
+  //Tạo URL thanh toán VNPay
   async createPaymentUrl(params) {
     try {
       const {
@@ -68,7 +66,7 @@ class PaymentService {
 
       const txnRef = orderId || this.generateOrderId();
 
-      // Normalize IP address - VNPay không chấp nhận IPv6
+      /* Normalize IP address - VNPay không chấp nhận IPv6 */
       let ipAddr = customerInfo.ipAddr || "127.0.0.1";
       if (ipAddr === "::1" || ipAddr === "::ffff:127.0.0.1") {
         ipAddr = "127.0.0.1";
@@ -89,7 +87,7 @@ class PaymentService {
         vnp_CreateDate: this.formatDate(new Date()),
       };
 
-      // Log để debug
+      /* Log để debug */
       console.log("[Payment] Creating payment with data:", {
         txnRef,
         amount: paymentData.vnp_Amount,
@@ -101,7 +99,7 @@ class PaymentService {
       const sortedParams = this.sortObject(paymentData);
       const queryString = this.createQueryString(sortedParams);
 
-      // Debug log
+      /* Debug log */
       console.log(
         "[Payment] Query string:",
         queryString.substring(0, 150) + "..."
@@ -133,11 +131,9 @@ class PaymentService {
     }
   }
 
-  /**
-   * Xác thực kết quả thanh toán từ VNPay
-   * @param {Object} queryParams - Query parameters từ VNPay return
-   * @returns {Object} - Kết quả xác thực
-   */
+  //Xác thực kết quả thanh toán từ VNPay
+  //@param {Object} queryParams - Query parameters từ VNPay return
+  //@returns {Object} - Kết quả xác thực
   async verifyPayment(queryParams) {
     try {
       const {
@@ -154,7 +150,7 @@ class PaymentService {
         vnp_SecureHash,
       } = queryParams;
 
-      // Kiểm tra mã phản hồi
+      /* Kiểm tra mã phản hồi */
       if (vnp_ResponseCode !== "00") {
         return {
           success: false,
@@ -164,7 +160,7 @@ class PaymentService {
         };
       }
 
-      // Tạo lại chuỗi để xác thực chữ ký
+      /* Tạo lại chuỗi để xác thực chữ ký */
       const verifyData = {
         vnp_Amount,
         vnp_BankCode,
@@ -182,7 +178,7 @@ class PaymentService {
       const queryString = this.createQueryString(sortedParams);
       const secureHash = this.createSecureHash(queryString);
 
-      // Xác thực chữ ký
+      /* Xác thực chữ ký */
       if (secureHash !== vnp_SecureHash) {
         return {
           success: false,
@@ -197,7 +193,7 @@ class PaymentService {
         code: vnp_ResponseCode,
         message: "Thanh toán thành công",
         txnRef: vnp_TxnRef,
-        amount: parseInt(vnp_Amount) / 100, // Chuyển về VND
+        amount: parseInt(vnp_Amount) / 100, /* Chuyển về VND */
         transactionNo: vnp_TransactionNo,
         bankTranNo: vnp_BankTranNo,
         payDate: vnp_PayDate,
@@ -209,11 +205,9 @@ class PaymentService {
     }
   }
 
-  /**
-   * Kiểm tra trạng thái giao dịch
-   * @param {String} txnRef - Mã giao dịch
-   * @returns {Object} - Trạng thái giao dịch
-   */
+  //Kiểm tra trạng thái giao dịch
+  //@param {String} txnRef - Mã giao dịch
+  //@returns {Object} - Trạng thái giao dịch
   async checkTransactionStatus(txnRef) {
     try {
       const data = {
@@ -247,20 +241,16 @@ class PaymentService {
     }
   }
 
-  /**
-   * Tạo mã đơn hàng duy nhất
-   */
+  //Tạo mã đơn hàng duy nhất
   generateOrderId() {
     const timestamp = Date.now();
     const random = Math.floor(Math.random() * 1000);
     return `ORDER_${timestamp}_${random}`;
   }
 
-  /**
-   * Format ngày theo định dạng VNPay
-   */
+  //Format ngày theo định dạng VNPay
   formatDate(date) {
-    // VNPay cần format YYYYMMDDHHMMSS (14 số)
+    /* VNPay cần format YYYYMMDDHHMMSS (14 số) */
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const day = String(date.getDate()).padStart(2, "0");
@@ -271,9 +261,7 @@ class PaymentService {
     return `${year}${month}${day}${hours}${minutes}${seconds}`;
   }
 
-  /**
-   * Sắp xếp object theo key
-   */
+  //Sắp xếp object theo key
   sortObject(obj) {
     const sorted = {};
     Object.keys(obj)
@@ -286,28 +274,22 @@ class PaymentService {
     return sorted;
   }
 
-  /**
-   * Tạo query string từ object
-   */
+  //Tạo query string từ object
   createQueryString(obj) {
     return Object.keys(obj)
       .map((key) => `${key}=${encodeURIComponent(obj[key])}`)
       .join("&");
   }
 
-  /**
-   * Tạo chữ ký bảo mật
-   */
+  //Tạo chữ ký bảo mật
   createSecureHash(queryString) {
-    // VNPay yêu cầu hash theo chuẩn HMAC-SHA512
+    /* VNPay yêu cầu hash theo chuẩn HMAC-SHA512 */
     const hmac = crypto.createHmac("sha512", this.vnpaySecretKey);
     hmac.update(queryString, "utf8");
     return hmac.digest("hex");
   }
 
-  /**
-   * Lấy thông báo từ mã phản hồi
-   */
+  // Lấy thông báo từ mã phản hồi
   getResponseMessage(code) {
     const messages = {
       "00": "Giao dịch thành công",
