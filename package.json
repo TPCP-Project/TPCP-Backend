@@ -6,7 +6,9 @@
   "main": "server.js",
   "scripts": {
     "dev": "nodemon server.js",
-    "start": "node server.js"
+    "start": "node server.js",
+    "build": "echo 'No build step required for Node.js'",
+    "prod": "NODE_ENV=production node server.js"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
