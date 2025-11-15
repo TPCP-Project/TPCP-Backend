@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-
+//Schema định nghĩa các gói dịch vụ có bán
 const subscriptionPackageSchema = new mongoose.Schema(
   {
     name: {
