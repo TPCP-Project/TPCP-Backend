@@ -49,7 +49,7 @@ const projectMemberSchema = new Schema(
   { timestamps: true }
 );
 
-// Index kết hợp để đảm bảo mỗi user chỉ là member một lần trong project
+/* Index kết hợp để đảm bảo mỗi user chỉ là member một lần trong project */
 projectMemberSchema.index({ project_id: 1, user_id: 1 }, { unique: true });
 
 module.exports = mongoose.model("ProjectMember", projectMemberSchema);
