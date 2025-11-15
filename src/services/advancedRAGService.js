@@ -136,7 +136,7 @@ class AdvancedRAGService {
   async rewriteQuery(originalQuery) {
     try {
       const model = this.genAI.getGenerativeModel({
-        model: "gemini-1.5-flash",
+        model: "gemini-2.5-flash",
       });
 
       const prompt = `Bạn là chuyên gia phân tích câu hỏi khách hàng về trang sức.
@@ -393,7 +393,7 @@ BÂY GIỜ VIẾT LẠI:`;
 
       // Step 6: Generate response
       const model = this.genAI.getGenerativeModel({
-        model: "gemini-1.5-flash",
+        model: "gemini-2.5-flash",
       });
       const result = await model.generateContent(prompt);
       const text = result.response.text();
@@ -412,7 +412,7 @@ BÂY GIỜ VIẾT LẠI:`;
   async analyzeIntent(question) {
     try {
       const model = this.genAI.getGenerativeModel({
-        model: "gemini-1.5-flash",
+        model: "gemini-2.5-flash",
       });
 
       const prompt = `Phân tích ý định của khách hàng. Chỉ trả về 1 trong các giá trị sau:
