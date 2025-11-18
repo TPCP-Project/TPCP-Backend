@@ -3,24 +3,24 @@ const router = express.Router();
 const subscriptionController = require("../controllers/subscriptionController");
 const { authenticateToken } = require("../middlewares/auth");
 
-// Tạo URL thanh toán cho gói Pro
+// Tạo URL thanh toán cho gói Pro 
 router.post(
   "/create-payment",
   authenticateToken,
   subscriptionController.createPayment
 );
 
-// Xử lý kết quả thanh toán từ VNPay (public route)
+// Xử lý kết quả thanh toán từ VNPay (public route) 
 router.get("/payment-return", subscriptionController.handlePaymentReturn);
 
-// Kiểm tra trạng thái subscription
+// Kiểm tra trạng thái subscription 
 router.get(
   "/status",
   authenticateToken,
   subscriptionController.getSubscriptionStatus
 );
 
-// Gia hạn subscription
+// Gia hạn subscription 
 router.post(
   "/renew",
   authenticateToken,
@@ -41,7 +41,7 @@ router.get(
   subscriptionController.getPaymentHistory
 );
 
-// Mock payment success - CHỈ DÙNG TRONG DEVELOPMENT
+// Mock payment success - CHỈ DÙNG TRONG DEVELOPMENT 
 router.get("/mock-payment-success", authenticateToken, async (req, res) => {
   try {
     const userId = req.user.id;

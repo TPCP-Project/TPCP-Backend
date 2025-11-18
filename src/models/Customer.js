@@ -34,7 +34,7 @@ const customerSchema = new Schema(
       paymentMethod: { type: String, default: "vnpay" }
     },
     fbPageId: { type: String },
-    // Consider encrypting at app/service layer or via mongoose-field-encryption
+    /* Consider encrypting at app/service layer or via mongoose-field-encryption */
     fbPageAccessToken: { type: String, select: false },
     chatbotSettings: {
       tone: { type: String, default: "professional" },
