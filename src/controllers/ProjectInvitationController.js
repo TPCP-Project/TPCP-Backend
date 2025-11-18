@@ -36,6 +36,7 @@ class ProjectInvitationController {
   /**
    * Gửi lời mời tham gia project qua email
    * @route POST /api/projects/invitations/send
+   * @body {inviteCode: string, email: string | string[]} - email có thể là string (phân tách bằng , hoặc space) hoặc array
    */
   async sendInvitation(req, res) {
     try {
