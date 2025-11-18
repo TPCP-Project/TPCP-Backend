@@ -37,7 +37,7 @@ class ProjectInvitationService {
       throw new Error("Bạn không phải là thành viên của project này");
     }
 
-    if (membership.role !== "owner" && !membership.permissions.canInvite) {
+    if (membership.role !== "owner" && !(membership.permissions && membership.permissions.canInvite)) {
       throw new Error("Bạn không có quyền tạo mã mời cho project này");
     }
 
@@ -70,11 +70,11 @@ class ProjectInvitationService {
   /**
    * Gửi lời mời tham gia project qua email
    * @param {string} inviteCode - Mã mời
-   * @param {string} email - Email người được mời
+   * @param {string|string[]} emails - Email hoặc mảng email người được mời
    * @param {string} inviterId - ID người mời
    * @returns {Promise<Object>} - Kết quả gửi lời mời
    */
-  async sendInvitation(inviteCode, email, inviterId) {
+  async sendInvitation(inviteCode, emails, inviterId) {
     // Tìm mã mời
     const invitation = await ProjectInvitation.findOne({
       invite_code: inviteCode,
@@ -92,53 +92,120 @@ class ProjectInvitationService {
       throw new Error("Project không tồn tại");
     }
 
-    // Tìm người được mời
-    const invitee = await User.findOne({ email: email.toLowerCase() });
-    if (!invitee) {
-      throw new Error("Không tìm thấy người dùng với email này");
-    }
-
-    // Kiểm tra xem người dùng đã là thành viên của project chưa
-    const existingMembership = await ProjectMember.findOne({
-      project_id: project._id,
-      user_id: invitee._id,
-      status: "active",
-    });
-
-    if (existingMembership) {
-      throw new Error("Người dùng này đã là thành viên của project");
-    }
-
-    // Kiểm tra xem có yêu cầu tham gia pending nào không
-    const pendingRequest = await ProjectJoinRequest.findOne({
-      project_id: project._id,
-      user_id: invitee._id,
-      status: "pending",
-    });
-
-    if (pendingRequest) {
-      throw new Error("Người dùng này đã có yêu cầu tham gia đang chờ xử lý");
-    }
-
     // Tìm thông tin người mời
     const inviter = await User.findById(inviterId);
     if (!inviter) {
       throw new Error("Không tìm thấy thông tin người mời");
     }
 
-    // Gửi email mời
-    await sendProjectInvitation(
-      invitee.email,
-      invitee.username,
-      inviter.name,
-      project.name,
-      inviteCode
-    );
+    // Chuyển emails thành mảng nếu là string
+    let emailList = [];
+    if (typeof emails === 'string') {
+      // Tách chuỗi email bằng dấu phẩy hoặc dấu cách
+      emailList = emails
+        .split(/[,\s]+/)
+        .map(e => e.trim())
+        .filter(e => e.length > 0);
+    } else if (Array.isArray(emails)) {
+      emailList = emails.map(e => e.trim()).filter(e => e.length > 0);
+    } else {
+      throw new Error("Định dạng email không hợp lệ");
+    }
+
+    if (emailList.length === 0) {
+      throw new Error("Vui lòng nhập ít nhất một email");
+    }
+
+    const results = {
+      success: [],
+      failed: [],
+      total: emailList.length,
+    };
+
+    // Gửi email cho từng địa chỉ
+    for (const email of emailList) {
+      try {
+        // Tìm người được mời
+        const invitee = await User.findOne({ email: email.toLowerCase() });
+        if (!invitee) {
+          results.failed.push({
+            email,
+            reason: "Không tìm thấy người dùng với email này",
+          });
+          continue;
+        }
+
+        // Kiểm tra xem người dùng đã là thành viên của project chưa
+        const existingMembership = await ProjectMember.findOne({
+          project_id: project._id,
+          user_id: invitee._id,
+          status: "active",
+        });
+
+        if (existingMembership) {
+          results.failed.push({
+            email,
+            reason: "Người dùng này đã là thành viên của project",
+          });
+          continue;
+        }
+
+        // Kiểm tra xem có yêu cầu tham gia pending nào không
+        const pendingRequest = await ProjectJoinRequest.findOne({
+          project_id: project._id,
+          user_id: invitee._id,
+          status: "pending",
+        });
+
+        if (pendingRequest) {
+          results.failed.push({
+            email,
+            reason: "Người dùng này đã có yêu cầu tham gia đang chờ xử lý",
+          });
+          continue;
+        }
+
+        // Gửi email mời
+        await sendProjectInvitation(
+          invitee.email,
+          invitee.username,
+          inviter.name,
+          project.name,
+          inviteCode
+        );
+
+        // Tạo yêu cầu tham gia ngay sau khi gửi email thành công
+        await ProjectJoinRequest.create({
+          project_id: project._id,
+          user_id: invitee._id,
+          invitation_id: invitation._id,
+          status: "pending",
+          request_date: new Date(),
+        });
+
+        results.success.push(email);
+      } catch (error) {
+        results.failed.push({
+          email,
+          reason: error.message || "Lỗi không xác định",
+        });
+      }
+    }
+
+    // Tạo thông báo kết quả
+    let message = "";
+    if (results.success.length > 0 && results.failed.length === 0) {
+      message = `Đã gửi lời mời thành công đến ${results.success.length} email`;
+    } else if (results.success.length > 0 && results.failed.length > 0) {
+      message = `Đã gửi thành công ${results.success.length}/${results.total} email. ${results.failed.length} email thất bại`;
+    } else {
+      message = `Không thể gửi email đến tất cả ${results.failed.length} địa chỉ`;
+    }
 
     return {
-      message: "Đã gửi lời mời tham gia project thành công",
-      to: invitee.email,
+      message,
       project_name: project.name,
+      results,
     };
   }
   async joinByInviteCode(inviteCode, userId) {
@@ -183,6 +250,25 @@ class ProjectInvitationService {
     });
 
     if (pendingRequest) {
+      // Nếu đã có request pending và project bật auto-approve, tự động phê duyệt
+      if (project.auto_approve_members) {
+        console.log("🔄 Auto-approving existing pending request...", {
+          requestId: pendingRequest._id.toString(),
+          projectId: project._id.toString(),
+          userId: userId.toString(),
+          ownerId: project.owner_id.toString(),
+        });
+
+        const result = await this.approveJoinRequest(
+          pendingRequest._id.toString(),
+          project.owner_id.toString()
+        );
+
+        console.log("✅ Auto-approve result:", result);
+        return result;
+      }
+
+      // Nếu không auto-approve, thông báo đang chờ phê duyệt
       return {
         message: "Yêu cầu tham gia của bạn đang chờ được phê duyệt",
         request_id: pendingRequest._id,
@@ -264,7 +350,7 @@ class ProjectInvitationService {
     if (
       membership.role !== "owner" &&
       membership.role !== "admin" &&
-      !membership.permissions.canApproveMembers
+      !(membership.permissions && membership.permissions.canApproveMembers)
     ) {
       throw new Error(
         "Bạn không có quyền xem danh sách yêu cầu tham gia project"
@@ -321,7 +407,7 @@ class ProjectInvitationService {
 
       if (
         approverMembership.role !== "admin" &&
-        !approverMembership.permissions.canApproveMembers
+        !(approverMembership.permissions && approverMembership.permissions.canApproveMembers)
       ) {
         throw new Error(
           "Bạn không có quyền phê duyệt yêu cầu tham gia project"
@@ -439,7 +525,7 @@ class ProjectInvitationService {
     if (
       rejecterMembership.role !== "owner" &&
       rejecterMembership.role !== "admin" &&
-      !rejecterMembership.permissions.canApproveMembers
+      !(rejecterMembership.permissions && rejecterMembership.permissions.canApproveMembers)
     ) {
       throw new Error("Bạn không có quyền từ chối yêu cầu tham gia project");
     }
@@ -577,7 +663,7 @@ class ProjectInvitationService {
     if (
       membership.role !== "owner" &&
       membership.role !== "admin" &&
-      !membership.permissions.canInvite
+      !(membership.permissions && membership.permissions.canInvite)
     ) {
       throw new Error("Bạn không có quyền xem danh sách mã mời");
     }

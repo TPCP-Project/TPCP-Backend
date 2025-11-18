@@ -1,6 +1,7 @@
 const paymentService = require("../services/paymentService");
 const Customer = require("../models/Customer");
 const User = require("../models/user");
+const AdminNotification = require("../models/adminNotification");
 
 // Temporary storage for order mapping (should use Redis in production)
 const orderMapping = new Map();
@@ -127,6 +128,9 @@ class SubscriptionController {
 
         await customer.save();
         console.log(`[Subscription] Created new customer: ${customer._id}`);
+
+        // Tạo notification cho admin
+        await this.createAdminNotificationForPurchase(user, customer, verifyResult);
       } else {
         //Cập nhật subscription 
         customer.subscriptionPlan = "pro";
@@ -144,6 +148,9 @@ class SubscriptionController {
 
         await customer.save();
         console.log(`[Subscription] Updated customer: ${customer._id}`);
+
+        // Tạo notification cho admin
+        await this.createAdminNotificationForPurchase(user, customer, verifyResult);
       }
 
       //Xóa mapping sau khi xử lý xong
@@ -323,7 +330,65 @@ class SubscriptionController {
     }
   }
 
-  /* Helper: Lấy userId từ orderId */
+
+  /**
+   * Helper: Tạo và gửi notification cho admin khi có purchase mới
+   */
+  async createAdminNotificationForPurchase(user, customer, verifyResult) {
+    try {
+      // Tạo admin notification
+      const notification = new AdminNotification({
+        type: "new_purchase",
+        title: `Gói Pro mới: ${customer.businessName || user.name}`,
+        message: `${user.name} (${user.email}) đã mua gói Pro với giá ${verifyResult.amount.toLocaleString('vi-VN')} VND`,
+        relatedUser: user._id,
+        relatedPurchase: customer._id,
+        data: {
+          userName: user.name,
+          userEmail: user.email,
+          businessName: customer.businessName,
+          amount: verifyResult.amount,
+          transactionNo: verifyResult.transactionNo,
+          paymentMethod: "vnpay",
+          planName: "pro",
+          expiresAt: customer.subscriptionExpiresAt,
+        },
+      });
+
+      await notification.save();
+      console.log(`[Subscription] Created admin notification: ${notification._id}`);
+
+      // Gửi real-time notification cho tất cả admin users qua Socket.IO
+      const adminUsers = await User.find({ role: "admin" });
+
+      if (global.socketManager && adminUsers.length > 0) {
+        adminUsers.forEach((admin) => {
+          global.socketManager.sendMessageToUser(admin._id.toString(), "new_purchase_notification", {
+            notification: {
+              _id: notification._id,
+              type: notification.type,
+              title: notification.title,
+              message: notification.message,
+              data: notification.data,
+              isRead: notification.isRead,
+              createdAt: notification.createdAt,
+            },
+          });
+        });
+        console.log(`[Subscription] Sent real-time notification to ${adminUsers.length} admin(s)`);
+      }
+
+      return notification;
+    } catch (error) {
+      console.error("[Subscription] Error creating admin notification:", error);
+      // Không throw error để không ảnh hưởng đến flow thanh toán chính
+    }
+  }
+
+  /**
+   * Helper: Lấy userId từ orderId
+   */
+
   getUserIdFromOrderId(orderId) {
     return orderMapping.get(orderId) || null;
   }

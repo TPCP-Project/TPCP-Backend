@@ -10,7 +10,9 @@ exports.addComment = async (req, res) => {
     const user = req.user;
 
     if (!content || !content.trim()) {
-      return res.status(400).json({ message: "Nội dung bình luận không được để trống" });
+      return res
+        .status(400)
+        .json({ message: "Nội dung bình luận không được để trống" });
     }
 
     const task = await Task.findById(taskId);
@@ -20,7 +22,7 @@ exports.addComment = async (req, res) => {
     const membership = await ProjectMember.findOne({
       project_id: task.projectId,
       user_id: user._id,
-      status: "active"
+      status: "active",
     });
 
     if (!membership) {
@@ -30,8 +32,10 @@ exports.addComment = async (req, res) => {
     }
 
     // Owner/Admin có thể comment bất kỳ task nào, member chỉ comment task của mình
-    const isOwnerOrAdmin = membership.role === "owner" || membership.role === "admin";
-    const isAssignedEmployee = task.assignedTo?.toString() === user._id.toString();
+    const isOwnerOrAdmin =
+      membership.role === "owner" || membership.role === "admin";
+    const isAssignedEmployee =
+      task.assignedTo?.toString() === user._id.toString();
 
     if (!isOwnerOrAdmin && !isAssignedEmployee) {
       return res.status(403).json({
@@ -69,7 +73,7 @@ exports.getCommentsByTask = async (req, res) => {
     const membership = await ProjectMember.findOne({
       project_id: task.projectId,
       user_id: user._id,
-      status: "active"
+      status: "active",
     });
 
     if (!membership) {
@@ -80,8 +84,10 @@ exports.getCommentsByTask = async (req, res) => {
 
     // Owner/Admin có thể xem comment của bất kỳ task nào
     // Member chỉ xem comment của task được giao cho mình
-    const isOwnerOrAdmin = membership.role === "owner" || membership.role === "admin";
-    const isAssignedEmployee = task.assignedTo?.toString() === user._id.toString();
+    const isOwnerOrAdmin =
+      membership.role === "owner" || membership.role === "admin";
+    const isAssignedEmployee =
+      task.assignedTo?.toString() === user._id.toString();
 
     if (!isOwnerOrAdmin && !isAssignedEmployee) {
       return res.status(403).json({

@@ -88,19 +88,50 @@ class ChatService {
       }
 
       // Kiểm tra conversation đã tồn tại chưa
-      const existingConversation = await Conversation.findOne({
-        type: "direct",
-        $or: [
-          { created_by: userId, "participants.user_id": targetUserId },
-          { created_by: targetUserId, "participants.user_id": userId },
-        ],
-      });
+      // Tìm tất cả conversation type="direct" mà userId tham gia
+      const userParticipations = await ChatParticipant.find({
+        user_id: userId,
+        status: "active",
+      }).select("conversation_id");
 
-      if (existingConversation) {
-        return existingConversation;
+      const conversationIds = userParticipations.map((p) => p.conversation_id);
+
+      // Tìm conversation type="direct" có cả 2 users tham gia
+      for (const conversationId of conversationIds) {
+        const conversation = await Conversation.findOne({
+          _id: conversationId,
+          type: "direct",
+          status: "active",
+        });
+
+        if (conversation) {
+          // Kiểm tra target user có tham gia conversation này không
+          const targetParticipant = await ChatParticipant.findOne({
+            conversation_id: conversation._id,
+            user_id: targetUserId,
+            status: "active",
+          });
+
+          if (targetParticipant) {
+            // Conversation đã tồn tại, populate và trả về
+            const populatedConversation = await Conversation.findById(
+              conversation._id
+            )
+              .populate("created_by", "name username email avatar")
+              .lean();
+
+            return populatedConversation;
+          }
+        }
       }
 
       // Tạo conversation mới
+      console.log("🔵 Creating new direct conversation...", {
+        userId,
+        targetUserId,
+        targetUserName: targetUser.name,
+      });
+
       const conversation = new Conversation({
         type: "direct",
         name: `Chat với ${targetUser.name}`,
@@ -108,6 +139,7 @@ class ChatService {
       });
 
       await conversation.save();
+      console.log("✅ Conversation saved to DB:", conversation._id.toString());
 
       // Thêm cả 2 user vào conversation
       const participants = [
@@ -141,7 +173,10 @@ class ChatService {
         },
       ];
 
-      await ChatParticipant.insertMany(participants);
+      const insertedParticipants = await ChatParticipant.insertMany(participants);
+      console.log("✅ Participants created:", insertedParticipants.length);
+
+      // NOTE: Không cần cập nhật stats manually vì có hook tự động
 
       // Populate conversation
       const populatedConversation = await Conversation.findById(
@@ -150,8 +185,10 @@ class ChatService {
         .populate("created_by", "name username email avatar")
         .lean();
 
+      console.log("✅ Returning conversation:", populatedConversation._id);
       return populatedConversation;
     } catch (error) {
+      console.error("❌ Error creating direct conversation:", error);
       throw new Error(`Không thể tạo conversation: ${error.message}`);
     }
   }
