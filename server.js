@@ -65,7 +65,7 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// === KHAI BÁO ROUTES ===
+// KHAI BÁO ROUTES ===
 app.use("/auth", authRoutes);
 app.use("/api", projectRoutes); // Routes quản lý project
 app.use("/api", projectInvitationRoutes); // Routes invitation
